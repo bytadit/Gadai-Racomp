@@ -1,0 +1,196 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Gender {
+  PRIA
+  WANITA
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum CustomerStatus {
+  AMAN
+  FAVORIT
+  RISIKO
+  MASALAH
+}
+
+enum ItemType {
+  KENDARAAN
+  OTHER
+}
+
+enum TransactionType {
+  SIMPAN
+  PAKAI
+}
+
+enum TransactionStatus {
+  BERJALAN
+  SELESAI
+  TERLAMBAT
+}
+
+enum CicilanStatus {
+  AMAN
+  BERMASALAH
+  DIJUAL
+}
+
+enum PaymentType {
+  CASH
+  BNI
+  BSI
+}
+
+enum DocumentType {
+  FOTO
+  DOKUMEN
+}
+
+// enum ItemDocumentType {
+//   STNK
+//   BPKB
+//   FOTO
+//   OTHER
+// }
+
+// enum TransactionDocumentType {
+//   INVOICE
+//   FOTO
+//   KWITANSI
+//   OTHER
+// }
+
+// enum CustomerDocumentType {
+//   KTP
+//   SIM
+//   KK
+//   FOTO
+//   OTHER
+// }
+
+
+model Customer {
+  id Int @id @default(autoincrement())
+  name String
+  desc String? @db.Text
+  address String @db.Text
+  nik String @unique
+  gender Gender
+  birthdate DateTime? @db.Date
+  status CustomerStatus @default(AMAN)
+  role Role @default(USER)
+  items Item[]
+  customerPhones CustomerPhone[]
+  customerDocuments CustomerDocument[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Item {
+  id Int @id @default(autoincrement())
+  name String
+  type ItemType @default(KENDARAAN)
+  desc String? @db.Text
+  year Int? @db.SmallInt
+  value Decimal? @db.Money
+  brand String
+  serial String? @unique
+  customer Customer @relation(fields: [customerId], references: [id])
+  customerId Int
+  transactions Transaction[]
+  itemDocuments ItemDocument[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Transaction {
+  id Int @id @default(autoincrement())
+  desc String? @db.Text
+  type TransactionType @default(SIMPAN)
+  nilai_pinjaman Decimal @db.Money
+  persen_tanggungan Decimal @db.Money
+  waktu_pinjam DateTime @default(now())
+  tgl_jatuh_tempo DateTime @db.Date
+  tanggungan_awal Decimal @db.Money
+  tanggungan_akhir Decimal @db.Money
+  waktu_kembali DateTime @db.Timestamp()
+  status_transaksi TransactionStatus @default(BERJALAN)
+  status_cicilan CicilanStatus @default(AMAN)
+  item Item @relation(fields: [itemId], references: [id])
+  itemId Int
+  cashflows CashFlow[]
+  transactionDocuments TransactionDocument[]
+}
+
+model CashFlow {
+  id Int @id @default(autoincrement())
+  termin Int
+  desc String? @db.Text
+  amount Decimal @db.Money
+  tanggungan Decimal @db.Money
+  waktu_bayar DateTime
+  payment_type PaymentType
+  kwitansi_url String? 
+  transaction Transaction @relation(fields: [transactionId], references: [id])
+  transactionId Int
+}
+
+model Config {
+  id Int @id @default(autoincrement())
+  key String @unique
+  name String?
+  value String
+}
+
+model CustomerPhone {
+  id Int @id @default(autoincrement())
+  customer Customer @relation(fields: [customerId], references: [id])
+  customerId Int
+  phone_number String
+  is_active Boolean @default(false)
+  is_whatsapp Boolean @default(false)
+}
+
+model ItemDocument {
+  id Int @id @default(autoincrement())
+  item Item @relation(fields: [itemId], references: [id])
+  itemId Int
+  name String?
+  doc_type DocumentType
+  doc_url String?
+}
+
+model CustomerDocument {
+  id Int @id @default(autoincrement())
+  customer Customer @relation(fields: [customerId], references: [id])
+  customerId Int
+  name String?
+  doc_type DocumentType
+  doc_url String?
+}
+
+model TransactionDocument {
+  id Int @id @default(autoincrement())
+  transaction Transaction @relation(fields: [transactionId], references: [id])
+  transactionId Int
+  name String?
+  doc_type DocumentType
+  doc_url String?
+}
