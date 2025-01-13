@@ -1,6 +1,7 @@
 {
-  "/_not-found/page": "app/_not-found/page.js",
+  "/api/customers/route": "app/api/customers/route.js",
+  "/api/customer-phones/route": "app/api/customer-phones/route.js",
+  "/dashboard/pelanggan/page": "app/dashboard/pelanggan/page.js",
   "/dashboard/pelanggan/[pelangganId]/page": "app/dashboard/pelanggan/[pelangganId]/page.js",
-  "/dashboard/overview/page": "app/dashboard/overview/page.js",
-  "/dashboard/pelanggan/page": "app/dashboard/pelanggan/page.js"
+  "/dashboard/pelanggan/[pelangganId]/ubah/page": "app/dashboard/pelanggan/[pelangganId]/ubah/page.js"
 }

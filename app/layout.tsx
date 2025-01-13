@@ -8,8 +8,8 @@ import NextTopLoader from 'nextjs-toploader';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Next Shadcn',
-  description: 'Basic dashboard with Next.js and Shadcn'
+    title: 'Next Shadcn',
+    description: 'Basic dashboard with Next.js and Shadcn',
 };
 
 // const lato = Lato({
@@ -19,33 +19,33 @@ export const metadata: Metadata = {
 // });
 
 const inter = Inter({
-  subsets: ['latin'],
-  display: 'swap',
-})
+    subsets: ['latin'],
+    display: 'swap',
+});
 
 export default async function RootLayout({
-  children
+    children,
 }: {
-  children: React.ReactNode;
+    children: React.ReactNode;
 }) {
-  // const session = await auth();
-  return (
-    <html
-      lang="en"
-      className={`${inter.className}`}
-      suppressHydrationWarning={true}
-    >
-      <body className={'overflow-hidden'}>
-        <NextTopLoader showSpinner={false} />
-        <Providers>
-          <Toaster />
-          {children}
-        </Providers>
-        {/* <Providers session={session}>
+    // const session = await auth();
+    return (
+        <html
+            lang="en"
+            className={`${inter.className}`}
+            suppressHydrationWarning={true}
+        >
+            <body className={'overflow-hidden'}>
+                <NextTopLoader showSpinner={false} />
+                <Providers>
+                    <Toaster richColors position="top-center" />
+                    {children}
+                </Providers>
+                {/* <Providers session={session}>
           <Toaster />
           {children}
         </Providers> */}
-      </body>
-    </html>
-  );
+            </body>
+        </html>
+    );
 }

@@ -8,49 +8,59 @@ import { DataTableSearch } from '@/components/ui/table/data-table-search';
 import { Customer } from '@prisma/client';
 import { columns } from '../pelanggan-tables/columns';
 import {
-  GENDER_OPTIONS,
-  useCustomerTableFilters
+    GENDER_OPTIONS,
+    STATUS_OPTIONS,
+    useCustomerTableFilters,
 } from './use-pelanggan-table-filters';
 
 export default function CustomerTable({
-  data,
-  totalData
+    data,
+    totalData,
 }: {
-  data: Customer[];
-  totalData: number;
+    data: Customer[];
+    totalData: number;
 }) {
-  const {
-    genderFilter,
-    setGenderFilter,
-    isAnyFilterActive,
-    resetFilters,
-    searchQuery,
-    setPage,
-    setSearchQuery
-  } = useCustomerTableFilters();
+    const {
+        genderFilter,
+        setGenderFilter,
+        statusFilter,
+        setStatusFilter,
+        isAnyFilterActive,
+        resetFilters,
+        searchQuery,
+        setPage,
+        setSearchQuery,
+    } = useCustomerTableFilters();
 
-  return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-4">
-        <DataTableSearch
-          searchKey="name"
-          searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
-          setPage={setPage}
-        />
-        <DataTableFilterBox
-          filterKey="gender"
-          title="Gender"
-          options={GENDER_OPTIONS}
-          setFilterValue={setGenderFilter}
-          filterValue={genderFilter}
-        />
-        <DataTableResetFilter
-          isFilterActive={isAnyFilterActive}
-          onReset={resetFilters}
-        />
-      </div>
-      <DataTable columns={columns} data={data} totalItems={totalData} />
-    </div>
-  );
+    return (
+        <div className="space-y-4">
+            <div className="flex flex-wrap items-center gap-4">
+                <DataTableSearch
+                    searchKey="name"
+                    searchQuery={searchQuery}
+                    setSearchQuery={setSearchQuery}
+                    setPage={setPage}
+                />
+                <DataTableFilterBox
+                    filterKey="gender"
+                    title="Gender"
+                    options={GENDER_OPTIONS}
+                    setFilterValue={setGenderFilter}
+                    filterValue={genderFilter}
+                />
+                <DataTableFilterBox
+                    filterKey="status"
+                    title="Status"
+                    options={STATUS_OPTIONS}
+                    setFilterValue={setStatusFilter}
+                    filterValue={statusFilter}
+                />
+                <DataTableResetFilter
+                    isFilterActive={isAnyFilterActive}
+                    onReset={resetFilters}
+                />
+            </div>
+            <DataTable columns={columns} data={data} totalItems={totalData} />
+        </div>
+    );
 }

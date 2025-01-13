@@ -1,9 +1,17 @@
-import CustomerViewPage from '../_components/pelanggan-view-page';
+import PageContainer from '@/components/layout/page-container';
+import CustomerForm from '../_components/pelanggan-form';
+import CustomerDetailPage from './_components/detail-pelanggan';
 
-export const metadata = {
-  title: 'Dashboard : Halaman Customer'
-};
-
-export default function Page() {
-  return <CustomerViewPage />;
+export default function Page({ params }: { params: { pelangganId: string } }) {
+    return (
+        <PageContainer>
+            {params.pelangganId === 'baru' ? (
+                <CustomerForm />
+            ) : (
+                <CustomerDetailPage
+                    params={{ pelangganId: params.pelangganId }}
+                />
+            )}
+        </PageContainer>
+    );
 }

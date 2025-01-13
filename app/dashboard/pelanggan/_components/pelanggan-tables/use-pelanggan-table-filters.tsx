@@ -5,9 +5,15 @@ import { useQueryState } from 'nuqs';
 import { useCallback, useMemo } from 'react';
 
 export const GENDER_OPTIONS = [
-  { value: 'pria', label: 'PRIA' },
-  { value: 'wanita', label: 'WANITA' }
+  { value: 'PRIA', label: 'Pria' },
+  { value: 'WANITA', label: 'Wanita' }
 ];
+export const STATUS_OPTIONS = [
+    { value: 'AMAN', label: 'Aman' },
+    { value: 'RISIKO', label: 'Risiko' },
+    { value: 'FAVORIT', label: 'Favorit' },
+    { value: 'MASALAH', label: 'Masalah' }
+  ];
 
 export function useCustomerTableFilters() {
   const [searchQuery, setSearchQuery] = useQueryState(
@@ -21,6 +27,10 @@ export function useCustomerTableFilters() {
     'gender',
     searchParams.gender.withOptions({ shallow: false }).withDefault('')
   );
+  const [statusFilter, setStatusFilter] = useQueryState(
+    'status',
+    searchParams.status.withOptions({ shallow: false }).withDefault('')
+  );
 
   const [page, setPage] = useQueryState(
     'page',
@@ -30,19 +40,22 @@ export function useCustomerTableFilters() {
   const resetFilters = useCallback(() => {
     setSearchQuery(null);
     setGenderFilter(null);
+    setStatusFilter(null);
 
     setPage(1);
-  }, [setSearchQuery, setGenderFilter, setPage]);
+  }, [setSearchQuery, setGenderFilter, setStatusFilter, setPage]);
 
   const isAnyFilterActive = useMemo(() => {
-    return !!searchQuery || !!genderFilter;
-  }, [searchQuery, genderFilter]);
+    return !!searchQuery || !!genderFilter || !!statusFilter;
+  }, [searchQuery, genderFilter, statusFilter]);
 
   return {
     searchQuery,
     setSearchQuery,
     genderFilter,
+    statusFilter,
     setGenderFilter,
+    setStatusFilter,
     page,
     setPage,
     resetFilters,

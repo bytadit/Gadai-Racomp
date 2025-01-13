@@ -5,9 +5,11 @@ import { matchSorter } from 'match-sorter'; // For filtering
 export const getCustomers = {
     async getAll({
         genders = [],
+        statuses = [],
         search,
     }: {
         genders?: string[];
+        statuses?: string[];
         search?: string;
     }) {
         let customers = await prisma.customer.findMany();
@@ -16,6 +18,13 @@ export const getCustomers = {
         if (genders.length > 0) {
             customers = customers.filter((customer) =>
                 genders.includes(customer.gender),
+            );
+        }
+        // Filter customers based on selected statuses
+
+        if (statuses.length > 0) {
+            customers = customers.filter((customer) =>
+                statuses.includes(customer.status),
             );
         }
         // Search functionality across multiple fields
@@ -31,17 +40,20 @@ export const getCustomers = {
         page = 1,
         limit = 10,
         genders,
+        statuses,
         search,
     }: {
         page?: number;
         limit?: number;
         genders?: string;
+        statuses?: string;
         search?: string;
     }) {
         const gendersArray = genders ? genders.split('.') : [];
-        console.log('gendersArray', gendersArray);
+        const statusesArray = statuses ? statuses.split('.') : [];
         const allCustomers = await this.getAll({
             genders: gendersArray,
+            statuses: statusesArray,
             search,
         });
         const totalCustomers = allCustomers.length;
