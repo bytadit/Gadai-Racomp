@@ -1,5 +1,5 @@
 {
-  "/api/customers/route": "app/api/customers/route.js",
+  "/api/customers/[id]/route": "app/api/customers/[id]/route.js",
   "/api/customer-phones/route": "app/api/customer-phones/route.js",
   "/dashboard/pelanggan/page": "app/dashboard/pelanggan/page.js",
   "/dashboard/pelanggan/[pelangganId]/page": "app/dashboard/pelanggan/[pelangganId]/page.js",

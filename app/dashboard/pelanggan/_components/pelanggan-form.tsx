@@ -2,7 +2,7 @@
 import * as React from 'react';
 import { useState, ChangeEvent } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Plus, Trash2 } from 'lucide-react';
+import { CircleCheckBig, Plus, Trash2 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
@@ -339,15 +339,23 @@ export default function CustomerForm() {
                                         className="grid grid-cols-8 gap-1.5 mt-4"
                                         key={index}
                                     >
-                                        <Input
-                                            className="col-span-1 w-8"
-                                            type="radio"
-                                            checked={phone.is_active}
-                                            onChange={() =>
+                                         <Button
+                                            type="button"
+                                            onClick={() =>
                                                 handleSetActive(index)
                                             }
-                                            title="Set as Active"
-                                        />
+                                            variant={
+                                                phone.is_active
+                                                    ? 'success'
+                                                    : 'outline'
+                                            }
+                                        >
+                                            {phone.is_active ? (
+                                                <CircleCheckBig color="white" />
+                                            ) : (
+                                                ''
+                                            )}
+                                        </Button>
                                         <Input
                                             className="col-span-6"
                                             type="text"
