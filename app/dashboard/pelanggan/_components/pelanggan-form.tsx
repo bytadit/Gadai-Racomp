@@ -30,13 +30,45 @@ import DatePicker from '@/components/date-picker';
 import { Textarea } from '@/components/ui/textarea';
 import { SpokeSpinner } from '@/components/ui/spinner';
 import { Label } from '@/components/ui/label';
+import { FileUploader } from '@/components/file-uploader';
 // import { createCustomer } from '@/lib/actions';
 
 type Phone = {
     phone_number: string;
     is_active: boolean;
 };
+type FileWithFileName = {
+    file: File; // The actual file object
+    fileName: string; // The file name (a string)
+};
+
+const MAX_FILE_SIZE = 5000000;
+const ACCEPTED_IMAGE_TYPES = [
+    'image/jpeg',
+    'image/jpg',
+    'image/png',
+    'image/webp',
+];
 const customerSchema = z.object({
+    image: z
+        .array(
+            z.object({
+                file: z.instanceof(File), // Ensure it's a `File` instance
+                fileName: z.string(), // Ensure it includes the filename
+            }),
+        )
+        .nonempty('Image is required.')
+        .refine(
+            (files) => files.every((file) => file.file.size <= MAX_FILE_SIZE),
+            `Max file size is 5MB.`,
+        )
+        .refine(
+            (files) =>
+                files.every((file) =>
+                    ACCEPTED_IMAGE_TYPES.includes(file.file.type),
+                ),
+            '.jpg, .jpeg, .png, and .webp files are accepted.',
+        ),
     name: z
         .string()
         .min(2, {
@@ -117,6 +149,7 @@ export default function CustomerForm() {
     const onSubmit = async (values: z.infer<typeof customerSchema>) => {
         setIsPending(true); // Set loading state to true
         try {
+            // Saving Customer Data
             const customerResponse = await fetch('/api/customers', {
                 method: 'POST',
                 headers: {
@@ -127,18 +160,17 @@ export default function CustomerForm() {
             if (!customerResponse.ok) {
                 throw new Error('Failed to save customer data');
             }
-
-            // const customer = await customerResponse.json();
-            // const customerId = customer.id;
             const { customer } = await customerResponse.json();
             const customerId = customer.id;
 
-            // console.log(customerId);
+            // Saving Customer Phone Numbers
             const phoneData = phoneNumbers.map((phone) => ({
                 customer_id: customerId,
                 phone_number: phone.phone_number,
                 is_active: phone.is_active,
             }));
+
+            console.log(customerId);
 
             const phonesResponse = await fetch('/api/customer-phones', {
                 method: 'POST',
@@ -148,6 +180,71 @@ export default function CustomerForm() {
 
             if (!phonesResponse.ok)
                 throw new Error('Failed to save phone numbers');
+
+            // Saving Customer Documents
+            const mimeToExtension: { [key: string]: string } = {
+                'image/jpeg': 'jpg',
+                'image/png': 'png',
+                'application/pdf': 'pdf',
+                'text/plain': 'txt',
+            };
+            if (values.image && values.image.length > 0) {
+                const uploadedDocs = await Promise.all(
+                    values.image.map(async (file: FileWithFileName) => {
+                        // Correctly using FileWithFileName here
+                        const fileName = `Customer-${customerId}_${file.fileName}`; // fileName should be a separate property
+                        const fileType = file.file.type; // e.g., "image/jpeg"
+                        const extension = mimeToExtension[fileType] || 'bin';
+                        const fileNameWithExtension = `${fileName}.${extension}`;
+                        if (!fileName) {
+                            throw new Error('File name is required.');
+                        }
+
+                        const formData = new FormData();
+                        formData.append('file', file.file); // Append the actual file (a File object)
+                        formData.append('fileName', fileNameWithExtension); // Append with the correct extension
+
+                        // Upload to the API that handles file storage
+                        const uploadResponse = await fetch(
+                            '/api/customer-documents/upload',
+                            {
+                                method: 'POST',
+                                body: formData, // Using FormData to send the file
+                            },
+                        );
+
+                        if (!uploadResponse.ok) {
+                            throw new Error('Failed to upload file');
+                        }
+
+                        const { publicUrl } = await uploadResponse.json();
+
+                        // Save file metadata to the database
+                        const docResponse = await fetch(
+                            '/api/customer-documents',
+                            {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify({
+                                    customer_id: customerId,
+                                    file_name: fileName,
+                                    doc_url: publicUrl,
+                                }),
+                            },
+                        );
+
+                        if (!docResponse.ok) {
+                            throw new Error('Failed to save file metadata');
+                        }
+
+                        return docResponse.json();
+                    }),
+                );
+
+                console.log('Uploaded Docs:', uploadedDocs);
+            }
 
             router.push('/dashboard/pelanggan');
             toast.success(`Data pelanggan berhasil dibuat!`);
@@ -173,6 +270,30 @@ export default function CustomerForm() {
                         onSubmit={form.handleSubmit(onSubmit)}
                         className="space-y-8"
                     >
+                        <FormField
+                            control={form.control}
+                            name="image"
+                            render={({ field }) => (
+                                <div className="space-y-6">
+                                    <FormItem className="w-full">
+                                        <FormLabel>
+                                            Dokumen (Foto) Pelanggan
+                                        </FormLabel>
+                                        <FormControl>
+                                            <FileUploader
+                                                value={field.value || []}
+                                                onValueChange={(files) =>
+                                                    field.onChange(files)
+                                                }
+                                                maxFiles={4}
+                                                maxSize={4 * 1024 * 1024}
+                                            />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                </div>
+                            )}
+                        />
                         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                             <FormField
                                 control={form.control}
@@ -339,7 +460,7 @@ export default function CustomerForm() {
                                         className="grid grid-cols-8 gap-1.5 mt-4"
                                         key={index}
                                     >
-                                         <Button
+                                        <Button
                                             type="button"
                                             onClick={() =>
                                                 handleSetActive(index)

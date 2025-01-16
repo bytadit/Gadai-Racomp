@@ -45,6 +45,7 @@ export async function PUT(
                 desc: body.desc,
                 birthdate: new Date(body.birthdate),
                 gender: body.gender,
+                updatedAt: new Date(),
             },
         });
         return NextResponse.json(

@@ -38,6 +38,7 @@ export async function PUT(
                 phone_number: body.phone_number,
                 is_active: body.is_active,
                 is_whatsapp: true,
+                updatedAt: new Date(),
             },
         });
 

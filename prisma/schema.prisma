@@ -137,6 +137,8 @@ model Transaction {
   itemId Int
   cashflows CashFlow[]
   transactionDocuments TransactionDocument[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model CashFlow {
@@ -150,6 +152,8 @@ model CashFlow {
   kwitansi_url String? 
   transaction Transaction @relation(fields: [transactionId], references: [id])
   transactionId Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Config {
@@ -157,15 +161,8 @@ model Config {
   key String @unique
   name String?
   value String
-}
-
-model CustomerPhone {
-  id Int @id @default(autoincrement())
-  customer Customer @relation(fields: [customerId], references: [id])
-  customerId Int
-  phone_number String
-  is_active Boolean @default(false)
-  is_whatsapp Boolean @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model ItemDocument {
@@ -175,6 +172,18 @@ model ItemDocument {
   name String?
   doc_type DocumentType
   doc_url String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+model CustomerPhone {
+  id Int @id @default(autoincrement())
+  customer Customer @relation(fields: [customerId], references: [id])
+  customerId Int
+  phone_number String
+  is_active Boolean @default(false)
+  is_whatsapp Boolean @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
 }
 
 model CustomerDocument {
@@ -184,6 +193,8 @@ model CustomerDocument {
   name String?
   doc_type DocumentType
   doc_url String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model TransactionDocument {
@@ -193,4 +204,6 @@ model TransactionDocument {
   name String?
   doc_type DocumentType
   doc_url String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
