@@ -1,9 +1,6 @@
 {
-  "/api/customers/route": "app/api/customers/route.js",
-  "/api/customer-phones/route": "app/api/customer-phones/route.js",
-  "/api/customer-documents/upload/route": "app/api/customer-documents/upload/route.js",
-  "/api/customer-documents/route": "app/api/customer-documents/route.js",
-  "/dashboard/overview/page": "app/dashboard/overview/page.js",
-  "/dashboard/pelanggan/page": "app/dashboard/pelanggan/page.js",
-  "/dashboard/pelanggan/[pelangganId]/page": "app/dashboard/pelanggan/[pelangganId]/page.js"
+  "/_not-found/page": "app/_not-found/page.js",
+  "/api/customers/[id]/route": "app/api/customers/[id]/route.js",
+  "/dashboard/pelanggan/[pelangganId]/page": "app/dashboard/pelanggan/[pelangganId]/page.js",
+  "/dashboard/pelanggan/page": "app/dashboard/pelanggan/page.js"
 }

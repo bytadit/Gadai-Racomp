@@ -1,6 +1,16 @@
 'use client';
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import Image from 'next/image';
+
+import { AspectRatio } from '@/components/ui/aspect-ratio';
+import {
+    Carousel,
+    CarouselContent,
+    CarouselItem,
+    CarouselNext,
+    CarouselPrevious,
+} from '@/components/ui/carousel';
 import { buttonVariants } from '@/components/ui/button';
 import { SpokeSpinner } from '@/components/ui/spinner';
 import { TriangleAlert, Pencil, PhoneCall, ArrowLeft } from 'lucide-react';
@@ -15,7 +25,8 @@ type Customer = {
     desc?: string;
     birthdate: string;
     gender: 'PRIA' | 'WANITA';
-    customerPhones: CustomerPhone[]; // Specify the type of customerPhones
+    customerPhones: CustomerPhone[];
+    customerDocuments: CustomerDocument[];
 };
 
 type CustomerPhone = {
@@ -24,6 +35,14 @@ type CustomerPhone = {
     phone_number: string;
     is_active: boolean;
     is_whatsapp: boolean;
+};
+
+type CustomerDocument = {
+    id: number;
+    customerId: number;
+    name: string;
+    doc_type: string;
+    doc_url: string;
 };
 
 export default function CustomerDetailPage({
@@ -45,6 +64,7 @@ export default function CustomerDetailPage({
                     throw new Error('Failed to fetch customer');
                 }
                 const data = await response.json();
+                console.log(data);
                 setCustomer(data);
             } catch (error) {
                 console.error('Error:', error);
@@ -196,6 +216,72 @@ export default function CustomerDetailPage({
                     )}
                 </div>
             </CardContent>
+            {customer.customerDocuments.length <= 0 ? (
+                ''
+            ) : (
+                <div className="flex flex-col border-t-2 justify-center text-center items-center">
+                    <CardHeader className="flex flex-row items-center justify-between mb-4">
+                        <CardTitle className="text-center text-2xl font-bold">
+                            Dokumen Pelanggan {customer.name}
+                        </CardTitle>
+                    </CardHeader>
+                    <Carousel
+                        opts={{
+                            align: 'start',
+                        }}
+                        className="w-full max-w-sm md:max-w-xl lg:max-w-3xl mb-6"
+                    >
+                        <CarouselContent>
+                            {customer.customerDocuments.map((doc, index) => (
+                                <CarouselItem
+                                    key={index}
+                                    className={cn('', {
+                                        'md:basis-1/2':
+                                            customer.customerDocuments
+                                                .length === 2,
+                                        'md:basis-1/3':
+                                            customer.customerDocuments.length >
+                                            2,
+                                    })}
+                                >
+                                    <div className="p-1">
+                                        <Card>
+                                            <CardContent className="flex aspect-square items-center justify-center p-6">
+                                                {/* <span className="text-3xl font-semibold">
+                                                        {doc.name}
+                                                    </span> */}
+                                                <AspectRatio
+                                                    ratio={16 / 9}
+                                                    className="bg-muted"
+                                                >
+                                                    <Image
+                                                        src={doc.doc_url}
+                                                        alt={doc.name}
+                                                        fill
+                                                        className="h-full w-full rounded-md object-cover"
+                                                    />
+                                                </AspectRatio>
+                                            </CardContent>
+                                        </Card>
+                                    </div>
+                                </CarouselItem>
+                            ))}
+                        </CarouselContent>
+                        <>
+                            {/* Always render buttons on mobile, conditionally render on larger screens */}
+                            <div
+                                className={cn('flex', {
+                                    'md:hidden flex':
+                                        customer.customerDocuments.length <= 3,
+                                })}
+                            >
+                                <CarouselPrevious />
+                                <CarouselNext />
+                            </div>
+                        </>
+                    </Carousel>
+                </div>
+            )}
         </Card>
     );
 }
