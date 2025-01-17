@@ -251,7 +251,7 @@ export default function CustomerDetailPage({
                                                         {doc.name}
                                                     </span> */}
                                                 <AspectRatio
-                                                    ratio={16 / 9}
+                                                    // ratio={16 / 9}
                                                     className="bg-muted"
                                                 >
                                                     <Image

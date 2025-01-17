@@ -1,6 +1,6 @@
 'use client';
 
-import { Trash, UploadIcon } from 'lucide-react';
+import { Trash, Undo2, UploadIcon } from 'lucide-react';
 import Image from 'next/image';
 import * as React from 'react';
 import Dropzone, {
@@ -98,7 +98,11 @@ type FileUploaderProps = {
 } & React.HTMLAttributes<HTMLDivElement>;
 
 // type FileWithFileName = File & { fileName?: string };
-type FileWithFileName = { file: File; fileName: string };
+type FileWithFileName = {
+    file: File;
+    fileName: string;
+    preview?: string; // Add preview to the type
+};
 
 export function FileUploader(props: FileUploaderProps) {
     const {
@@ -116,9 +120,59 @@ export function FileUploader(props: FileUploaderProps) {
     } = props;
 
     const [files, setFiles] = useControllableState<FileWithFileName[]>({
-        prop: valueProp,
-        onChange: onValueChange,
+        prop: valueProp ?? [],
+        onChange: props.onValueChange,
     });
+    const [editingFileIndex, setEditingFileIndex] = React.useState<
+        number | null
+    >(null);
+    const initialFilesRef = React.useRef<FileWithFileName[]>(valueProp || []);
+
+    const handleEditFile = (index: number) => {
+        if (!files || files.length <= index) return;
+        // setPreviousFile(files[index]);
+        setEditingFileIndex(index);
+
+        // Simulate a file selection dialog
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = props.accept ? Object.keys(props.accept).join(',') : '*';
+        input.onchange = (e: Event) => {
+            const target = e.target as HTMLInputElement;
+            if (target.files && target.files[0]) {
+                const newFile = target.files[0];
+                const updatedFiles = [...files];
+                updatedFiles[index] = {
+                    ...updatedFiles[index],
+                    file: newFile,
+                    fileName: newFile.name,
+                    preview: URL.createObjectURL(newFile),
+                };
+                setFiles(updatedFiles);
+                setEditingFileIndex(index);
+            }
+        };
+        input.click();
+    };
+
+    const handleUndoEdit = () => {
+        if (editingFileIndex !== null) {
+            if (!files || files.length <= editingFileIndex) return; // Ensure files is defined and index is valid
+            const updatedFiles = [...files];
+            const initialFile =
+                initialFilesRef.current[editingFileIndex] || null;
+            if (initialFile) {
+                updatedFiles[editingFileIndex] = initialFile;
+            } else {
+                // Remove the file if the initial state was no file
+                updatedFiles.splice(editingFileIndex, 1);
+            }
+            // updatedFiles[editingFileIndex] = previousFile;
+            setFiles(updatedFiles);
+            setEditingFileIndex(null);
+            // setPreviousFile(null);
+        }
+    };
 
     const onDrop = React.useCallback(
         (acceptedFiles: File[], rejectedFiles: FileRejection[]) => {
@@ -268,17 +322,32 @@ export function FileUploader(props: FileUploaderProps) {
             {files?.length ? (
                 <ScrollArea className="h-fit w-full px-3">
                     <div className="max-h-48 space-y-4">
-                        {files?.map((file, index) => (
-                            <FileCard
-                                key={index}
-                                file={file}
-                                onRemove={() => onRemove(index)}
-                                progress={progresses?.[file.file.name]}
-                                onFileNameChange={(newName) =>
-                                    onUpdateFileName(index, newName)
-                                }
-                            />
-                        ))}
+                        {files?.map((file, index) => {
+                            const initialFile =
+                                initialFilesRef.current[index] || null;
+                            const hasUndo =
+                                editingFileIndex === index &&
+                                (!!initialFile || initialFile === null);
+
+                            return (
+                                <FileCard
+                                    key={index}
+                                    file={file}
+                                    onRemove={() => onRemove(index)}
+                                    progress={progresses?.[file.file.name]}
+                                    onFileNameChange={(newName) =>
+                                        onUpdateFileName(index, newName)
+                                    }
+                                    onEditFile={() => handleEditFile(index)}
+                                    hasUndo={hasUndo}
+                                    onUndoEdit={
+                                        editingFileIndex === index
+                                            ? handleUndoEdit
+                                            : () => {}
+                                    }
+                                />
+                            );
+                        })}
                     </div>
                 </ScrollArea>
             ) : null}
@@ -289,8 +358,11 @@ export function FileUploader(props: FileUploaderProps) {
 type FileCardProps = {
     file: FileWithFileName;
     onRemove: () => void;
-    progress?: number;
     onFileNameChange: (newName: string) => void;
+    onEditFile: () => void;
+    onUndoEdit: () => void;
+    progress?: number;
+    hasUndo: boolean;
 };
 
 function FileCard({
@@ -298,6 +370,9 @@ function FileCard({
     progress,
     onRemove,
     onFileNameChange,
+    onEditFile,
+    onUndoEdit,
+    hasUndo,
 }: FileCardProps) {
     return (
         <div className="relative flex items-center space-x-4">
@@ -331,16 +406,38 @@ function FileCard({
                     {progress ? <Progress value={progress} /> : null}
                 </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 ml-auto">
+                {onUndoEdit && hasUndo && (
+                    <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        className="size-8 mt-6 order-1"
+                        onClick={onUndoEdit}
+                    >
+                        <span className="sr-only">Undo edit</span>
+                        <Undo2 />
+                    </Button>
+                )}
                 <Button
                     type="button"
                     variant="outline"
                     size="icon"
-                    className="size-8 mt-6"
+                    className="size-8 mt-6 order-3"
                     onClick={onRemove}
                 >
                     <Trash className="size-4 " aria-hidden="true" />
                     <span className="sr-only">Remove file</span>
+                </Button>
+                <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="size-8 mt-6 order-2"
+                    onClick={onEditFile}
+                >
+                    <UploadIcon className="size-4 " aria-hidden="true" />
+                    <span className="sr-only">Edit file</span>
                 </Button>
             </div>
         </div>

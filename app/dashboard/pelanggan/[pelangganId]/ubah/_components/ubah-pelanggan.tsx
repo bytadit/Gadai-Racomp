@@ -31,6 +31,7 @@ import DatePicker from '@/components/date-picker';
 import { Textarea } from '@/components/ui/textarea';
 import { TriangleAlert } from 'lucide-react';
 import { Label } from '@/components/ui/label';
+import { FileUploader } from '@/components/file-uploader';
 
 type Customer = {
     id: number;
@@ -46,6 +47,24 @@ type Phone = {
     phone_number: string;
     is_active: boolean;
 };
+type Document = {
+    id?: number;
+    name: string;
+    doc_url: string;
+};
+type FileWithFileName = {
+    id?: number; // Optional for existing documents
+    file: File; // The actual File object
+    fileName: string; // The custom file name provided by the user
+};
+
+const MAX_FILE_SIZE = 5000000;
+const ACCEPTED_IMAGE_TYPES = [
+    'image/jpeg',
+    'image/jpg',
+    'image/png',
+    'image/webp',
+];
 const customerSchema = z.object({
     name: z
         .string()
@@ -69,11 +88,30 @@ const customerSchema = z.object({
         required_error: 'Pilih jenis kelamin pelanggan!',
     }),
     status: z.enum(['AMAN', 'FAVORIT', 'RISIKO', 'MASALAH']).default('AMAN'),
+    image: z
+        .array(
+            z.object({
+                file: z.instanceof(File), // Ensure it's a `File` instance
+                fileName: z.string(), // Ensure it includes the filename
+            }),
+        )
+        .optional()
+        .refine(
+            (files) =>
+                !files ||
+                files.every((file) => file.file.size <= MAX_FILE_SIZE),
+            `Max file size is 5MB.`,
+        )
+        .refine(
+            (files) =>
+                !files ||
+                files.every((file) =>
+                    ACCEPTED_IMAGE_TYPES.includes(file.file.type),
+                ),
+            '.jpg, .jpeg, .png, and .webp files are accepted.',
+        ),
 });
 
-// 1. when new phone number added
-// 2. when phone number edited
-// 3. when phone number deleted
 export default function EditCustomerForm({
     params,
 }: {
@@ -89,17 +127,19 @@ export default function EditCustomerForm({
             birthdate: undefined,
             gender: undefined,
             status: 'AMAN',
+            image: [],
         },
     });
 
     const router = useRouter();
-    // const [phoneNumbers, setPhoneNumbers] = useState<Phone[]>([
-    //     { phone_number: '', is_active: true },
-    // ]);
     const [phoneNumbers, setPhoneNumbers] = useState<Phone[]>([
         { phone_number: '', is_active: true },
     ]);
     const [originalPhones, setOriginalPhones] = useState<Phone[]>([]);
+    const [customerDocuments, setCustomerDocuments] = useState<
+        FileWithFileName[]
+    >([]);
+    const [originalDocuments, setOriginalDocuments] = useState<Document[]>([]);
     const [customer, setCustomer] = React.useState<Customer | null>(null);
     const [isPending, setIsPending] = React.useState(false); // ✅ isPending state
     const [loading, setLoading] = React.useState(true); // ✅ isPending state
@@ -123,16 +163,6 @@ export default function EditCustomerForm({
         });
     };
 
-    // const handleRemovePhone = (index: number) => {
-    //     setPhoneNumbers((prevPhones) => {
-    //         const updatedPhones = prevPhones.filter((_, i) => i !== index);
-    //         if (prevPhones[index].is_active && updatedPhones.length > 0) {
-    //             updatedPhones[0].is_active = true;
-    //         }
-    //         return updatedPhones;
-    //     });
-    // };
-
     const handleRemovePhone = (index: number) => {
         setPhoneNumbers((prevPhones) =>
             prevPhones.filter((_, i) => i !== index),
@@ -148,7 +178,33 @@ export default function EditCustomerForm({
         );
     };
 
-    // ✅ Fetch and prefill data if editing
+    // Document management
+    const handleAddDocument = () => {
+        setCustomerDocuments((prevDocuments) => [
+            ...prevDocuments,
+            { file: new File([], ''), fileName: '', id: undefined }, // Matches FileWithFileName type
+        ]);
+    };
+    
+    const handleDocumentChange = (index: number, fileName: string) => {
+        setCustomerDocuments((prevDocuments) => {
+            const updatedDocuments = [...prevDocuments];
+            updatedDocuments[index] = {
+                ...updatedDocuments[index],
+                fileName, // Update the fileName instead of name
+            };
+            return updatedDocuments;
+        });
+    };
+    
+    
+
+    const handleRemoveDocument = (index: number) => {
+        setCustomerDocuments((prevDocuments) =>
+            prevDocuments.filter((_, i) => i !== index),
+        );
+    };
+
     React.useEffect(() => {
         if (params.pelangganId) {
             const fetchCustomer = async () => {
@@ -156,10 +212,10 @@ export default function EditCustomerForm({
                     const response = await fetch(
                         `/api/customers/${params.pelangganId}`,
                     );
+
                     if (response.ok) {
                         const data = await response.json();
                         setCustomer(data);
-                        // ✅ Populate form fields with fetched data
                         form.setValue('name', data.name);
                         form.setValue('nik', data.nik);
                         form.setValue('address', data.address);
@@ -177,6 +233,8 @@ export default function EditCustomerForm({
                                 { phone_number: '', is_active: true },
                             ],
                         );
+                        setCustomerDocuments(data.customerDocuments || []);
+                        setOriginalDocuments(data.customerDocuments || []);
                         // setCustomer(data);
                         setLoading(false);
                     } else {
@@ -224,19 +282,100 @@ export default function EditCustomerForm({
             if (!customerResponse.ok) {
                 throw new Error('Failed to save customer data');
             }
-
             const { customer } = await customerResponse.json();
-            console.log(customer);
             const updatedPhones = phoneNumbers.filter((phone) => phone.id);
             const newPhones = phoneNumbers.filter((phone) => !phone.id);
             const removedPhones = originalPhones.filter(
                 (phone) => !phoneNumbers.some((p) => p.id === phone.id),
             );
-            console.log(customer.id);
+            const mimeToExtension: { [key: string]: string } = {
+                'image/jpeg': 'jpg',
+                'image/png': 'png',
+                'application/pdf': 'pdf',
+                'text/plain': 'txt',
+            };
+            const images = values.image || [];
+            // Separate new, updated, and removed documents
+            const newDocuments: FileWithFileName[] = images.filter(
+                (file): file is FileWithFileName => !('id' in file),
+            ); // Files without an id are new
+            const updatedDocuments: FileWithFileName[] = images.filter(
+                (file): file is FileWithFileName =>
+                    'id' in file &&
+                    originalDocuments.some(
+                        (orig) =>
+                            orig.id === file.id && orig.name !== file.fileName,
+                    ),
+            ); // Files with an id and a changed name
+            const removedDocuments = originalDocuments.filter(
+                (doc) =>
+                    !images.some((file) => 'id' in file && file.id === doc.id),
+            ); // Documents that are in originalDocuments but not in images
+            if (newDocuments.length > 0) {
+                await Promise.all(
+                    newDocuments.map(async (file: FileWithFileName) => {
+                        const fileName = `Customer-${customer.id}_${file.fileName}`;
+                        const fileType = file.file.type; // e.g., "image/jpeg"
+                        const extension = mimeToExtension[fileType] || 'bin';
+                        const fileNameWithExtension = `${fileName}.${extension}`;
+                        if (!fileName)
+                            throw new Error('File name is required.');
+                        const formData = new FormData();
+                        formData.append('file', file.file); // Append the file object
+                        formData.append('fileName', fileNameWithExtension);
+                        const uploadResponse = await fetch(
+                            '/api/customer-documents/upload',
+                            {
+                                method: 'POST',
+                                body: formData,
+                            },
+                        );
+                        if (!uploadResponse.ok) {
+                            throw new Error('Failed to upload file');
+                        }
+                        const { publicUrl } = await uploadResponse.json();
+                        const docResponse = await fetch(
+                            '/api/customer-documents',
+                            {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    customer_id: customer.id,
+                                    file_name: fileName,
+                                    doc_url: publicUrl,
+                                }),
+                            },
+                        );
 
-            // Handle phone updates
+                        if (!docResponse.ok) {
+                            throw new Error('Failed to save document metadata');
+                        }
+                    }),
+                );
+            }
+            if (updatedDocuments.length > 0) {
+                await Promise.all(
+                    updatedDocuments.map((doc) =>
+                        fetch(`/api/customer-documents/${doc.id}`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                file_name: doc.fileName, // Update file name
+                            }),
+                        }),
+                    ),
+                );
+            }
+            if (removedDocuments.length > 0) {
+                await Promise.all(
+                    removedDocuments.map((doc) =>
+                        fetch(`/api/customer-documents/${doc.id}`, {
+                            method: 'DELETE',
+                        }),
+                    ),
+                );
+            }
             await Promise.all([
-                // Create new phone numbers
                 fetch('/api/customer-phones', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -284,6 +423,30 @@ export default function EditCustomerForm({
                         onSubmit={form.handleSubmit(onSubmit)}
                         className="space-y-8"
                     >
+                        <FormField
+                            control={form.control}
+                            name="image"
+                            render={({ field }) => (
+                                <div className="space-y-6">
+                                    <FormItem className="w-full">
+                                        <FormLabel>
+                                            Dokumen (Foto) Pelanggan
+                                        </FormLabel>
+                                        <FormControl>
+                                            <FileUploader
+                                                value={field.value || []}
+                                                onValueChange={(files) =>
+                                                    field.onChange(files)
+                                                }
+                                                maxFiles={4}
+                                                maxSize={4 * 1024 * 1024}
+                                            />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                </div>
+                            )}
+                        />
                         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                             <FormField
                                 control={form.control}
@@ -447,26 +610,6 @@ export default function EditCustomerForm({
                                 </Label>
                                 {phoneNumbers.length === 0 && (
                                     <div className="grid grid-cols-8 gap-1.5 mt-4">
-                                        {/* <Button
-                                            type="button"
-                                            onClick={() => handleSetActive(0)}
-                                            variant="outline"
-                                        >
-                                        </Button>
-                                        <Input
-                                            className="col-span-6"
-                                            type="text"
-                                            placeholder="Nomor telepon..."
-                                            value="" // Default empty value
-                                            onChange={(
-                                                e: ChangeEvent<HTMLInputElement>,
-                                            ) =>
-                                                handlePhoneChange(
-                                                    0,
-                                                    e.target.value,
-                                                )
-                                            }
-                                        /> */}
                                         <div className="col-span-1">
                                             <Button
                                                 type="button"
