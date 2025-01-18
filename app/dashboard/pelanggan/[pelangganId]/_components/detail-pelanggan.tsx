@@ -16,6 +16,7 @@ import { SpokeSpinner } from '@/components/ui/spinner';
 import { TriangleAlert, Pencil, PhoneCall, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
+import ZoomableImage from '@/components/zoomable-image';
 
 type Customer = {
     id: number;
@@ -244,16 +245,12 @@ export default function CustomerDetailPage({
                                             2,
                                     })}
                                 >
-                                    <div className="p-1">
+                                    <div className="p-1 relative">
+                                        {' '}
+                                        {/* Add relative to position ZoomableImage */}
                                         <Card>
                                             <CardContent className="flex aspect-square items-center justify-center p-6">
-                                                {/* <span className="text-3xl font-semibold">
-                                                        {doc.name}
-                                                    </span> */}
-                                                <AspectRatio
-                                                    // ratio={16 / 9}
-                                                    className="bg-muted"
-                                                >
+                                                <AspectRatio className="bg-muted">
                                                     <Image
                                                         src={doc.doc_url}
                                                         alt={doc.name}
@@ -262,6 +259,14 @@ export default function CustomerDetailPage({
                                                     />
                                                 </AspectRatio>
                                             </CardContent>
+
+                                            {/* Zoomable Image Button */}
+                                            <div className="z-10 absolute top-4 right-4">
+                                                <ZoomableImage
+                                                    src={doc.doc_url}
+                                                    alt={doc.name}
+                                                />
+                                            </div>
                                         </Card>
                                     </div>
                                 </CarouselItem>

@@ -2,10 +2,10 @@
 import * as React from 'react';
 import { useState, ChangeEvent } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Plus, Trash2, CircleCheckBig } from 'lucide-react';
+import { Plus, Trash2, CircleCheckBig, ArrowLeft } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 import { DocumentEditor } from '@/components/document-editor';
 import { toast } from 'sonner';
@@ -32,6 +32,7 @@ import DatePicker from '@/components/date-picker';
 import { Textarea } from '@/components/ui/textarea';
 import { TriangleAlert } from 'lucide-react';
 import { Label } from '@/components/ui/label';
+import Link from 'next/link';
 type Customer = {
     id: number;
     name: string;
@@ -223,8 +224,7 @@ export default function EditCustomerForm({
                                 { phone_number: '', is_active: true },
                             ],
                         );
-                        // Handle documents
-                        // Prepare initial documents
+
                         const initialDocuments = data.customerDocuments.map(
                             (doc: any) => ({
                                 id: doc.id,
@@ -286,6 +286,8 @@ export default function EditCustomerForm({
                 throw new Error('Failed to save customer data');
             }
             const { customer } = await customerResponse.json();
+            const customerId = customer.id;
+            // Phone Numbers
             const updatedPhones = phoneNumbers.filter((phone) => phone.id);
             const newPhones = phoneNumbers.filter((phone) => !phone.id);
             const removedPhones = originalPhones.filter(
@@ -298,7 +300,7 @@ export default function EditCustomerForm({
                     body: JSON.stringify(
                         newPhones.map((phone) => ({
                             ...phone,
-                            customer_id: customer.id,
+                            customer_id: customerId,
                         })),
                     ), // Send all new phones as an array
                 }),
@@ -316,6 +318,112 @@ export default function EditCustomerForm({
                 ),
             ]);
 
+            // Customer Documents
+            const { newDocuments, editedDocuments, deletedDocuments } =
+                documentData;
+            // Handle new documents (upload and save)
+            for (const newDoc of newDocuments) {
+                const formData = new FormData();
+                if (newDoc.file) {
+                    formData.append('file', newDoc.file); // Append only if file exists
+                } else {
+                    console.error('File is undefined for document:', newDoc);
+                }
+                formData.append('fileName', newDoc.name);
+
+                // Upload file to storage
+                const uploadResponse = await fetch(
+                    '/api/customer-documents/upload',
+                    {
+                        method: 'POST',
+                        body: formData,
+                    },
+                );
+
+                if (!uploadResponse.ok) {
+                    throw new Error(`Failed to upload file: ${newDoc.name}`);
+                }
+
+                const { publicUrl } = await uploadResponse.json();
+
+                // Save metadata to database
+                const docResponse = await fetch('/api/customer-documents', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        customer_id: customerId,
+                        file_name: newDoc.name,
+                        doc_url: publicUrl,
+                    }),
+                });
+
+                if (!docResponse.ok) {
+                    throw new Error(`Failed to save document: ${newDoc.name}`);
+                }
+            }
+            // Handle edited documents (update metadata in database)
+            for (const editedDoc of editedDocuments) {
+                const formData = new FormData();
+                if (editedDoc.file) {
+                    formData.append('file', editedDoc.file);
+                } else {
+                    console.error('File is undefined for document:', editedDoc);
+                }
+                formData.append('fileName', editedDoc.name);
+
+                // Upload new version of file to storage
+                const uploadResponse = await fetch(
+                    '/api/customer-documents/upload',
+                    {
+                        method: 'POST',
+                        body: formData,
+                    },
+                );
+
+                if (!uploadResponse.ok) {
+                    throw new Error(`Failed to upload file: ${editedDoc.name}`);
+                }
+
+                const { publicUrl } = await uploadResponse.json();
+
+                // Update metadata in database
+                const docResponse = await fetch(
+                    `/api/customer-documents/${editedDoc.id}`,
+                    {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            name: editedDoc.name,
+                            doc_url: publicUrl,
+                            customer_id: customerId,
+                            doc_type: 'FOTO',
+                        }),
+                    },
+                );
+
+                if (!docResponse.ok) {
+                    throw new Error(
+                        `Failed to update document: ${editedDoc.name}`,
+                    );
+                }
+            }
+
+            // Handle deleted documents
+            for (const deletedDoc of deletedDocuments) {
+                const deleteResponse = await fetch(
+                    `/api/customer-documents/${deletedDoc.id}`,
+                    {
+                        method: 'DELETE',
+                    },
+                );
+
+                if (!deleteResponse.ok) {
+                    throw new Error(
+                        `Failed to delete document: ${deletedDoc.name}`,
+                    );
+                }
+            }
+
             router.push(`/dashboard/pelanggan/${params.pelangganId}`);
             toast.success('Data pelanggan berhasil diubah!');
         } catch (error) {
@@ -327,18 +435,22 @@ export default function EditCustomerForm({
         }
     };
     return (
-        <Card className="mx-auto w-full">
-            <CardHeader>
-                <CardTitle className="text-left text-2xl font-bold">
-                    Ubah Data Pelanggan {customer?.name}
-                </CardTitle>
-            </CardHeader>
-            <CardContent>
-                <Form {...form}>
-                    <form
-                        onSubmit={form.handleSubmit(onSubmit)}
-                        className="space-y-8"
-                    >
+        <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)}>
+                <Card className="mx-auto w-full">
+                    <CardHeader className="flex items-center flex-row space-x-2 justify-between">
+                        <CardTitle className="text-left text-2xl font-bold">
+                            Ubah Data Pelanggan {customer?.name}
+                        </CardTitle>
+                        <Link
+                            href={`/dashboard/pelanggan/${customer?.id}`}
+                            className={buttonVariants({ variant: 'outline' })}
+                        >
+                            <ArrowLeft />
+                            {/* {' Kembali'} */}
+                        </Link>
+                    </CardHeader>
+                    <CardContent>
                         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                             <FormField
                                 control={form.control}
@@ -575,26 +687,15 @@ export default function EditCustomerForm({
                                 ))}
                             </div>
                         </div>
-                        {/* <CardHeader>
-                            <CardTitle className="text-center justify-center text-2xl font-bold">
-                                Dokumen Pelanggan {customer?.name}
-                            </CardTitle>
-                            <div className="mt-4">
-                                <Input
-                                    type="file"
-                                    onChange={(e) => {
-                                        const file = e.target.files?.[0];
-                                        if (file) handleAddFile(file);
-                                    }}
-                                />
-                            </div>
-                        </CardHeader> */}
+                    </CardContent>
+                </Card>
+                <Card className="mx-auto w-full my-6">
+                    <CardContent>
                         <FormField
                             control={form.control}
                             name="image"
                             render={() => (
                                 <FormItem>
-                                    {/* <FormLabel>Dokumen Pelanggan</FormLabel> */}
                                     <DocumentEditor
                                         initialDocuments={[
                                             ...documentData.initialDocuments,
@@ -608,18 +709,27 @@ export default function EditCustomerForm({
                                 </FormItem>
                             )}
                         />
-                        <Button type="submit" disabled={isPending}>
-                            {isPending ? (
-                                <span className="flex items-center flex-row gap-2">
-                                    <SpokeSpinner size="xs" /> Menyimpan
-                                </span>
-                            ) : (
-                                'Simpan'
-                            )}
-                        </Button>
-                    </form>
-                </Form>
-            </CardContent>
-        </Card>
+                    </CardContent>
+                </Card>
+                <div className="my-6 text-center items-center">
+                    <Button
+                        type="submit"
+                        size="lg"
+                        variant="success"
+                        disabled={isPending}
+                        className="text-lg text-white"
+                    >
+                        {isPending ? (
+                            <span className="flex items-center flex-row gap-2">
+                                <SpokeSpinner color="white" size="lg" />{' '}
+                                Menyimpan
+                            </span>
+                        ) : (
+                            'Simpan'
+                        )}
+                    </Button>
+                </div>
+            </form>
+        </Form>
     );
 }

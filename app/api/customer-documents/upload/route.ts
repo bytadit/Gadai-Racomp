@@ -6,7 +6,6 @@ export const config = {
         bodyParser: false, // Disable the default body parser for handling FormData
     },
 };
-
 export async function POST(req: Request) {
     try {
         // Read the incoming FormData
@@ -32,7 +31,6 @@ export async function POST(req: Request) {
                 multipart: true,
             },
         );
-
         return NextResponse.json(
             {
                 filePath: `uploads/customer-documents/${fileName}`, // File path stored in the bucket

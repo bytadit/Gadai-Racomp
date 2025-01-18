@@ -1,12 +1,6 @@
 import React from 'react';
-import {
-    Card,
-    CardHeader,
-    CardContent,
-    CardFooter,
-} from '@/components/ui/card';
+import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import Image from 'next/image';
 import { AspectRatio } from './ui/aspect-ratio';
 import {
@@ -18,6 +12,8 @@ import {
 } from '@/components/ui/carousel';
 import { cn } from '@/lib/utils';
 import { Plus, Trash, Undo2, UploadIcon } from 'lucide-react';
+import { Input } from './ui/input';
+import ZoomableImage from './zoomable-image';
 
 type DocumentType = 'FOTO' | 'DOKUMEN';
 
@@ -59,7 +55,10 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         const deletedDocuments = documents.filter(
             (doc) => doc.state === 'deleted',
         );
-
+        console.log('Initial Documents: ', initialDocuments);
+        console.log('New Documents: ', newDocuments);
+        console.log('Edited Documents: ', editedDocuments);
+        console.log('Deleted Documents: ', deletedDocuments);
         onDocumentsChange({ newDocuments, editedDocuments, deletedDocuments });
     }, [documents, onDocumentsChange]);
 
@@ -87,6 +86,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
             doc_url: previewUrl, // Temporary URL for preview
         };
         setDocuments((prev) => [newDocument, ...prev]);
+        console.log(newDocument);
     };
 
     const handleEditFile = (index: number, file: File) => {
@@ -121,6 +121,21 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         });
     };
 
+    const onFileNameChange = (index: number, newName: string) => {
+        setDocuments((prevDocuments) =>
+            prevDocuments.map((doc, i) =>
+                i === index
+                    ? {
+                          ...doc,
+                          name: newName,
+                          state:
+                              doc.state === 'original' ? 'edited' : doc.state,
+                      }
+                    : doc,
+            ),
+        );
+    };
+
     const handleUndo = (index: number) => {
         setDocuments((prev) =>
             prev.map((doc, i) =>
@@ -130,6 +145,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
                           file: initialDocuments[i]?.file || doc.file, // Restore the initial file for edited documents
                           state: 'original', // Revert to the initial state
                           doc_url: initialDocuments[i]?.doc_url || doc.doc_url, // Restore the initial URL
+                          name: initialDocuments[i]?.name || doc.name, // Restore the initial name
                       }
                     : doc,
             ),
@@ -138,13 +154,13 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
 
     return (
         <>
-            <div className="mb-8 flex justify-between gap-4 items-center">
-                <div className="font-semibold text-xl leading-none tracking-tight">
+            <div className="my-10 flex justify-center gap-4 items-center flex-col">
+                <div className="text-left text-2xl font-bold">
                     Dokumen {dataName}
                 </div>
                 <Button
                     type="button"
-                    variant="outline"
+                    variant="default"
                     onClick={handleButtonClick}
                 >
                     Tambah
@@ -175,7 +191,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
                             >
                                 <Card
                                     key={index}
-                                    className={`relative border ${
+                                    className={`relative border-2 ${
                                         doc.state === 'deleted'
                                             ? 'border-red-600'
                                             : doc.state === 'new'
@@ -185,7 +201,33 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
                                                 : 'border-gray-600' // Default border color
                                     }`}
                                 >
-                                    <CardContent className="flex aspect-square items-center justify-center p-4">
+                                    {/* Badge */}
+                                    <div
+                                        className={`z-10 absolute top-6 left-6 px-2 py-1 text-xs font-semibold text-white rounded ${
+                                            doc.state === 'deleted'
+                                                ? 'bg-red-600'
+                                                : doc.state === 'new'
+                                                  ? 'bg-green-600'
+                                                  : doc.state === 'edited'
+                                                    ? 'bg-yellow-500'
+                                                    : 'bg-transparent' // Default badge color
+                                        }`}
+                                    >
+                                        {doc.state === 'deleted'
+                                            ? 'Dihapus'
+                                            : doc.state === 'new'
+                                              ? 'Baru'
+                                              : doc.state === 'edited'
+                                                ? 'Diubah'
+                                                : ''}
+                                    </div>
+                                    <div className="z-10 absolute top-6 right-6">
+                                        <ZoomableImage
+                                            src={doc.doc_url}
+                                            alt={doc.name}
+                                        />
+                                    </div>
+                                    <CardContent className="flex flex-col aspect-square items-center justify-center p-4">
                                         {doc.doc_type === 'FOTO' ? (
                                             doc.doc_url ? (
                                                 <AspectRatio className="bg-muted">
@@ -228,13 +270,27 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
                                         ) : (
                                             <span>Unsupported Type</span>
                                         )}
+                                        <Input
+                                            type="text"
+                                            className={`mt-2 ${doc.state === 'deleted' ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                            readOnly={doc.state === 'deleted'} // Make input readonly if state is 'deleted'
+                                            placeholder="Nama file"
+                                            value={doc.name || ''}
+                                            onChange={(e) =>
+                                                onFileNameChange(
+                                                    index,
+                                                    e.target.value,
+                                                )
+                                            }
+                                        />
                                     </CardContent>
-                                    <CardFooter className="flex items-center mx-auto text-center justify-center gap-2">
+                                    <CardFooter className="flex items-center mx-auto text-center justify-center gap-1">
                                         {doc.state !== 'deleted' && (
                                             <>
                                                 <Button
                                                     type="button"
                                                     variant="outline"
+                                                    size="sm"
                                                     className="order-2"
                                                     onClick={() => {
                                                         // Trigger file input dialog
@@ -259,7 +315,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
                                                     }}
                                                 >
                                                     <UploadIcon
-                                                        className="size-4"
+                                                        className="size-1"
                                                         aria-hidden="true"
                                                     />
                                                     Ganti
@@ -269,6 +325,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
                                                     <Button
                                                         type="button"
                                                         variant="outline"
+                                                        size="sm"
                                                         className="order-1"
                                                         onClick={() =>
                                                             handleUndo(index)
@@ -277,8 +334,11 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
                                                         <span className="sr-only">
                                                             Undo Action
                                                         </span>
-                                                        <Undo2 />
-                                                        Batal Ganti
+                                                        <Undo2
+                                                            className="size-1"
+                                                            aria-hidden="true"
+                                                        />
+                                                        Undo
                                                     </Button>
                                                 )}
                                             </>
@@ -288,6 +348,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
                                             <Button
                                                 type="button"
                                                 variant="outline"
+                                                size="sm"
                                                 className="order-1"
                                                 onClick={() =>
                                                     handleUndo(index)
@@ -296,20 +357,24 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
                                                 <span className="sr-only">
                                                     Undo Action
                                                 </span>
-                                                <Undo2 />
-                                                Batal Hapus
+                                                <Undo2
+                                                    className="size-1"
+                                                    aria-hidden="true"
+                                                />
+                                                Undo
                                             </Button>
                                         ) : (
                                             <Button
                                                 type="button"
                                                 variant="outline"
+                                                size="sm"
                                                 className="order-3"
                                                 onClick={() =>
                                                     handleDeleteFile(index)
                                                 }
                                             >
                                                 <Trash
-                                                    className="size-4 "
+                                                    className="size-1"
                                                     aria-hidden="true"
                                                 />
                                                 <span className="sr-only">

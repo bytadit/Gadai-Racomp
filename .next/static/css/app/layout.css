@@ -778,6 +778,18 @@ video {
 .top-\[50\%\] {
   top: 50%;
 }
+.top-2 {
+  top: 0.5rem;
+}
+.top-6 {
+  top: 1.5rem;
+}
+.right-6 {
+  right: 1.5rem;
+}
+.left-6 {
+  left: 1.5rem;
+}
 .\!z-\[-1\] {
   z-index: -1 !important;
 }
@@ -820,6 +832,9 @@ video {
 .m-3 {
   margin: 0.75rem;
 }
+.m-0 {
+  margin: 0px;
+}
 .-mx-1 {
   margin-left: -0.25rem;
   margin-right: -0.25rem;
@@ -855,6 +870,18 @@ video {
 .mx-4 {
   margin-left: 1rem;
   margin-right: 1rem;
+}
+.my-12 {
+  margin-top: 3rem;
+  margin-bottom: 3rem;
+}
+.my-10 {
+  margin-top: 2.5rem;
+  margin-bottom: 2.5rem;
+}
+.my-6 {
+  margin-top: 1.5rem;
+  margin-bottom: 1.5rem;
 }
 .\!mt-0 {
   margin-top: 0px !important;
@@ -925,6 +952,15 @@ video {
 .mb-8 {
   margin-bottom: 2rem;
 }
+.mt-1 {
+  margin-top: 0.25rem;
+}
+.mt-10 {
+  margin-top: 2.5rem;
+}
+.mb-10 {
+  margin-bottom: 2.5rem;
+}
 .line-clamp-1 {
   overflow: hidden;
   display: -webkit-box;
@@ -976,6 +1012,14 @@ video {
 .size-8 {
   width: 2rem;
   height: 2rem;
+}
+.size-2 {
+  width: 0.5rem;
+  height: 0.5rem;
+}
+.size-1 {
+  width: 0.25rem;
+  height: 0.25rem;
 }
 .h-1\.5 {
   height: 0.375rem;
@@ -1070,6 +1114,21 @@ video {
 }
 .h-svh {
   height: 100svh;
+}
+.h-\[80vh\] {
+  height: 80vh;
+}
+.h-3 {
+  height: 0.75rem;
+}
+.h-\[calc\(100vh-220px\)\] {
+  height: calc(100vh - 220px);
+}
+.h-\[calc\(100vh-120px\)\] {
+  height: calc(100vh - 120px);
+}
+.h-\[calc\(100vh-20px\)\] {
+  height: calc(100vh - 20px);
 }
 .max-h-48 {
   max-height: 12rem;
@@ -1206,6 +1265,12 @@ video {
 .w-12 {
   width: 3rem;
 }
+.w-3 {
+  width: 0.75rem;
+}
+.w-\[90vw\] {
+  width: 90vw;
+}
 .min-w-0 {
   min-width: 0px;
 }
@@ -1238,6 +1303,12 @@ video {
 }
 .max-w-sm {
   max-width: 24rem;
+}
+.max-w-screen-lg {
+  max-width: 1024px;
+}
+.max-w-7xl {
+  max-width: 80rem;
 }
 .flex-1 {
   flex: 1 1 0%;
@@ -1347,6 +1418,9 @@ video {
 }
 .cursor-pointer {
   cursor: pointer;
+}
+.cursor-not-allowed {
+  cursor: not-allowed;
 }
 .touch-none {
   touch-action: none;
@@ -1512,6 +1586,9 @@ video {
 .overflow-hidden {
   overflow: hidden;
 }
+.overflow-clip {
+  overflow: clip;
+}
 .overflow-y-auto {
   overflow-y: auto;
 }
@@ -1567,6 +1644,9 @@ video {
 }
 .border-\[1\.5px\] {
   border-width: 1.5px;
+}
+.border-0 {
+  border-width: 0px;
 }
 .border-x-0 {
   border-left-width: 0px;
@@ -1757,6 +1837,33 @@ video {
 .bg-muted-foreground {
   background-color: hsl(var(--muted-foreground));
 }
+.bg-gray-600 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(75 85 99 / var(--tw-bg-opacity, 1));
+}
+.bg-green-600 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(22 163 74 / var(--tw-bg-opacity, 1));
+}
+.bg-red-600 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(220 38 38 / var(--tw-bg-opacity, 1));
+}
+.bg-yellow-500 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(234 179 8 / var(--tw-bg-opacity, 1));
+}
+.bg-black {
+  --tw-bg-opacity: 1;
+  background-color: rgb(0 0 0 / var(--tw-bg-opacity, 1));
+}
+.bg-black\/50 {
+  background-color: rgb(0 0 0 / 0.5);
+}
+.bg-gray-300 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(209 213 219 / var(--tw-bg-opacity, 1));
+}
 .bg-gradient-to-b {
   background-image: linear-gradient(to bottom, var(--tw-gradient-stops));
 }
@@ -1810,6 +1917,10 @@ video {
 }
 .stroke-red-500 {
   stroke: #ef4444;
+}
+.object-contain {
+  -o-object-fit: contain;
+     object-fit: contain;
 }
 .object-cover {
   -o-object-fit: cover;
@@ -2151,6 +2262,10 @@ video {
   --tw-text-opacity: 1;
   color: rgb(133 77 14 / var(--tw-text-opacity, 1));
 }
+.text-black {
+  --tw-text-opacity: 1;
+  color: rgb(0 0 0 / var(--tw-text-opacity, 1));
+}
 .underline {
   text-decoration-line: underline;
 }
@@ -2486,6 +2601,16 @@ video {
 
 .hover\:bg-transparent:hover {
   background-color: transparent;
+}
+
+.hover\:bg-gray-200:hover {
+  --tw-bg-opacity: 1;
+  background-color: rgb(229 231 235 / var(--tw-bg-opacity, 1));
+}
+
+.hover\:bg-black:hover {
+  --tw-bg-opacity: 1;
+  background-color: rgb(0 0 0 / var(--tw-bg-opacity, 1));
 }
 
 .hover\:text-accent-foreground:hover {
@@ -3531,8 +3656,16 @@ video {
     grid-template-columns: repeat(7, minmax(0, 1fr));
   }
 
+  .lg\:flex-col {
+    flex-direction: column;
+  }
+
   .lg\:justify-start {
     justify-content: flex-start;
+  }
+
+  .lg\:justify-between {
+    justify-content: space-between;
   }
 
   .lg\:gap-8 {

@@ -216,9 +216,7 @@ export default function CustomerForm() {
                         if (!uploadResponse.ok) {
                             throw new Error('Failed to upload file');
                         }
-
                         const { publicUrl } = await uploadResponse.json();
-
                         // Save file metadata to the database
                         const docResponse = await fetch(
                             '/api/customer-documents',
@@ -258,18 +256,15 @@ export default function CustomerForm() {
     };
 
     return (
-        <Card className="mx-auto w-full">
-            <CardHeader>
-                <CardTitle className="text-left text-2xl font-bold">
-                    Data Pelanggan Baru
-                </CardTitle>
-            </CardHeader>
-            <CardContent>
-                <Form {...form}>
-                    <form
-                        onSubmit={form.handleSubmit(onSubmit)}
-                        className="space-y-8"
-                    >
+        <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)}>
+                <Card className="mx-auto w-full">
+                    <CardHeader>
+                        <CardTitle className="text-left text-2xl font-bold">
+                            Data Pelanggan Baru
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent>
                         <FormField
                             control={form.control}
                             name="image"
@@ -514,18 +509,26 @@ export default function CustomerForm() {
                                 ))}
                             </div>
                         </div>
-                        <Button type="submit" disabled={isPending}>
-                            {isPending ? (
-                                <span className="flex items-center flex-row gap-2">
-                                    <SpokeSpinner size="xs" /> Menyimpan
-                                </span>
-                            ) : (
-                                'Simpan'
-                            )}
-                        </Button>
-                    </form>
-                </Form>
-            </CardContent>
-        </Card>
+                    </CardContent>
+                </Card>
+                <div className="my-6 items-center text-center text-white">
+                    <Button
+                        size="lg"
+                        type="submit"
+                        disabled={isPending}
+                        className="text-lg"
+                    >
+                        {isPending ? (
+                            <span className="flex items-center flex-row gap-2">
+                                <SpokeSpinner size="lg" color="white" />{' '}
+                                Menyimpan
+                            </span>
+                        ) : (
+                            'Simpan'
+                        )}
+                    </Button>
+                </div>
+            </form>
+        </Form>
     );
 }

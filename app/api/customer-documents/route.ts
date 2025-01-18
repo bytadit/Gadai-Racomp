@@ -13,7 +13,6 @@ export async function POST(req: Request) {
                 { status: 400 },
             );
         }
-
         // Create a new CustomerDocument entry
         const document = await prisma.customerDocument.create({
             data: {
@@ -23,7 +22,6 @@ export async function POST(req: Request) {
                 doc_url,
             },
         });
-
         return NextResponse.json(
             { message: 'Document created successfully', document },
             { status: 201 },
