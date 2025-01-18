@@ -7,6 +7,7 @@ import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
+import { DocumentEditor } from '@/components/document-editor';
 import { toast } from 'sonner';
 import {
     Select,
@@ -31,8 +32,6 @@ import DatePicker from '@/components/date-picker';
 import { Textarea } from '@/components/ui/textarea';
 import { TriangleAlert } from 'lucide-react';
 import { Label } from '@/components/ui/label';
-import { FileUploader } from '@/components/file-uploader';
-
 type Customer = {
     id: number;
     name: string;
@@ -47,16 +46,26 @@ type Phone = {
     phone_number: string;
     is_active: boolean;
 };
-type Document = {
-    id?: number;
+type DocumentType = 'FOTO' | 'DOKUMEN';
+
+type DocumentState = 'original' | 'new' | 'edited' | 'deleted';
+type CustomerDocument = {
+    id?: number; // ID from the database
     name: string;
-    doc_url: string;
+    doc_type: DocumentType;
+    doc_url?: string; // URL for existing documents
+    file?: File; // File object for new or edited documents
+    state: DocumentState; // Tracks the state of the document
 };
-type FileWithFileName = {
-    id?: number; // Optional for existing documents
-    file: File; // The actual File object
-    fileName: string; // The custom file name provided by the user
-};
+
+// type DocumentEditorProps = {
+//     initialDocuments: CustomerDocument[];
+//     onDocumentsChange: (documents: {
+//         newDocuments: CustomerDocument[];
+//         editedDocuments: CustomerDocument[];
+//         deletedDocuments: CustomerDocument[];
+//     }) => void;
+// };
 
 const MAX_FILE_SIZE = 5000000;
 const ACCEPTED_IMAGE_TYPES = [
@@ -91,8 +100,8 @@ const customerSchema = z.object({
     image: z
         .array(
             z.object({
-                file: z.instanceof(File), // Ensure it's a `File` instance
-                fileName: z.string(), // Ensure it includes the filename
+                file: z.instanceof(File),
+                fileName: z.string(),
             }),
         )
         .optional()
@@ -111,7 +120,6 @@ const customerSchema = z.object({
             '.jpg, .jpeg, .png, and .webp files are accepted.',
         ),
 });
-
 export default function EditCustomerForm({
     params,
 }: {
@@ -130,20 +138,20 @@ export default function EditCustomerForm({
             image: [],
         },
     });
-
     const router = useRouter();
     const [phoneNumbers, setPhoneNumbers] = useState<Phone[]>([
         { phone_number: '', is_active: true },
     ]);
     const [originalPhones, setOriginalPhones] = useState<Phone[]>([]);
-    const [customerDocuments, setCustomerDocuments] = useState<
-        FileWithFileName[]
-    >([]);
-    const [originalDocuments, setOriginalDocuments] = useState<Document[]>([]);
     const [customer, setCustomer] = React.useState<Customer | null>(null);
-    const [isPending, setIsPending] = React.useState(false); // ✅ isPending state
-    const [loading, setLoading] = React.useState(true); // ✅ isPending state
-
+    const [isPending, setIsPending] = React.useState(false);
+    const [loading, setLoading] = React.useState(true);
+    const [documentData, setDocumentData] = React.useState({
+        initialDocuments: [] as CustomerDocument[],
+        newDocuments: [] as CustomerDocument[],
+        editedDocuments: [] as CustomerDocument[],
+        deletedDocuments: [] as CustomerDocument[],
+    });
     const handlePhoneChange = (index: number, value: string) => {
         setPhoneNumbers((prevPhones) => {
             const updatedPhones = [...prevPhones];
@@ -151,7 +159,6 @@ export default function EditCustomerForm({
             return updatedPhones;
         });
     };
-
     const handleAddPhone = () => {
         setPhoneNumbers((prevPhones) => {
             const newPhone = {
@@ -162,13 +169,11 @@ export default function EditCustomerForm({
             return [...prevPhones, newPhone];
         });
     };
-
     const handleRemovePhone = (index: number) => {
         setPhoneNumbers((prevPhones) =>
             prevPhones.filter((_, i) => i !== index),
         );
     };
-
     const handleSetActive = (index: number) => {
         setPhoneNumbers((prevPhones) =>
             prevPhones.map((phone, i) => ({
@@ -178,33 +183,19 @@ export default function EditCustomerForm({
         );
     };
 
-    // Document management
-    const handleAddDocument = () => {
-        setCustomerDocuments((prevDocuments) => [
-            ...prevDocuments,
-            { file: new File([], ''), fileName: '', id: undefined }, // Matches FileWithFileName type
-        ]);
-    };
-    
-    const handleDocumentChange = (index: number, fileName: string) => {
-        setCustomerDocuments((prevDocuments) => {
-            const updatedDocuments = [...prevDocuments];
-            updatedDocuments[index] = {
-                ...updatedDocuments[index],
-                fileName, // Update the fileName instead of name
-            };
-            return updatedDocuments;
-        });
-    };
-    
-    
-
-    const handleRemoveDocument = (index: number) => {
-        setCustomerDocuments((prevDocuments) =>
-            prevDocuments.filter((_, i) => i !== index),
-        );
-    };
-
+    const handleDocumentsChange = React.useCallback(
+        (updatedData: {
+            newDocuments: CustomerDocument[];
+            editedDocuments: CustomerDocument[];
+            deletedDocuments: CustomerDocument[];
+        }) => {
+            setDocumentData((prev) => ({
+                ...prev,
+                ...updatedData,
+            }));
+        },
+        [],
+    );
     React.useEffect(() => {
         if (params.pelangganId) {
             const fetchCustomer = async () => {
@@ -212,7 +203,6 @@ export default function EditCustomerForm({
                     const response = await fetch(
                         `/api/customers/${params.pelangganId}`,
                     );
-
                     if (response.ok) {
                         const data = await response.json();
                         setCustomer(data);
@@ -233,9 +223,22 @@ export default function EditCustomerForm({
                                 { phone_number: '', is_active: true },
                             ],
                         );
-                        setCustomerDocuments(data.customerDocuments || []);
-                        setOriginalDocuments(data.customerDocuments || []);
-                        // setCustomer(data);
+                        // Handle documents
+                        // Prepare initial documents
+                        const initialDocuments = data.customerDocuments.map(
+                            (doc: any) => ({
+                                id: doc.id,
+                                name: doc.name,
+                                doc_type: doc.doc_type || 'Other',
+                                doc_url: doc.doc_url,
+                                state: 'original',
+                            }),
+                        );
+
+                        setDocumentData((prev) => ({
+                            ...prev,
+                            initialDocuments,
+                        }));
                         setLoading(false);
                     } else {
                         console.error('Failed to fetch customer data');
@@ -288,93 +291,6 @@ export default function EditCustomerForm({
             const removedPhones = originalPhones.filter(
                 (phone) => !phoneNumbers.some((p) => p.id === phone.id),
             );
-            const mimeToExtension: { [key: string]: string } = {
-                'image/jpeg': 'jpg',
-                'image/png': 'png',
-                'application/pdf': 'pdf',
-                'text/plain': 'txt',
-            };
-            const images = values.image || [];
-            // Separate new, updated, and removed documents
-            const newDocuments: FileWithFileName[] = images.filter(
-                (file): file is FileWithFileName => !('id' in file),
-            ); // Files without an id are new
-            const updatedDocuments: FileWithFileName[] = images.filter(
-                (file): file is FileWithFileName =>
-                    'id' in file &&
-                    originalDocuments.some(
-                        (orig) =>
-                            orig.id === file.id && orig.name !== file.fileName,
-                    ),
-            ); // Files with an id and a changed name
-            const removedDocuments = originalDocuments.filter(
-                (doc) =>
-                    !images.some((file) => 'id' in file && file.id === doc.id),
-            ); // Documents that are in originalDocuments but not in images
-            if (newDocuments.length > 0) {
-                await Promise.all(
-                    newDocuments.map(async (file: FileWithFileName) => {
-                        const fileName = `Customer-${customer.id}_${file.fileName}`;
-                        const fileType = file.file.type; // e.g., "image/jpeg"
-                        const extension = mimeToExtension[fileType] || 'bin';
-                        const fileNameWithExtension = `${fileName}.${extension}`;
-                        if (!fileName)
-                            throw new Error('File name is required.');
-                        const formData = new FormData();
-                        formData.append('file', file.file); // Append the file object
-                        formData.append('fileName', fileNameWithExtension);
-                        const uploadResponse = await fetch(
-                            '/api/customer-documents/upload',
-                            {
-                                method: 'POST',
-                                body: formData,
-                            },
-                        );
-                        if (!uploadResponse.ok) {
-                            throw new Error('Failed to upload file');
-                        }
-                        const { publicUrl } = await uploadResponse.json();
-                        const docResponse = await fetch(
-                            '/api/customer-documents',
-                            {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({
-                                    customer_id: customer.id,
-                                    file_name: fileName,
-                                    doc_url: publicUrl,
-                                }),
-                            },
-                        );
-
-                        if (!docResponse.ok) {
-                            throw new Error('Failed to save document metadata');
-                        }
-                    }),
-                );
-            }
-            if (updatedDocuments.length > 0) {
-                await Promise.all(
-                    updatedDocuments.map((doc) =>
-                        fetch(`/api/customer-documents/${doc.id}`, {
-                            method: 'PUT',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                file_name: doc.fileName, // Update file name
-                            }),
-                        }),
-                    ),
-                );
-            }
-            if (removedDocuments.length > 0) {
-                await Promise.all(
-                    removedDocuments.map((doc) =>
-                        fetch(`/api/customer-documents/${doc.id}`, {
-                            method: 'DELETE',
-                        }),
-                    ),
-                );
-            }
             await Promise.all([
                 fetch('/api/customer-phones', {
                     method: 'POST',
@@ -423,30 +339,6 @@ export default function EditCustomerForm({
                         onSubmit={form.handleSubmit(onSubmit)}
                         className="space-y-8"
                     >
-                        <FormField
-                            control={form.control}
-                            name="image"
-                            render={({ field }) => (
-                                <div className="space-y-6">
-                                    <FormItem className="w-full">
-                                        <FormLabel>
-                                            Dokumen (Foto) Pelanggan
-                                        </FormLabel>
-                                        <FormControl>
-                                            <FileUploader
-                                                value={field.value || []}
-                                                onValueChange={(files) =>
-                                                    field.onChange(files)
-                                                }
-                                                maxFiles={4}
-                                                maxSize={4 * 1024 * 1024}
-                                            />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                </div>
-                            )}
-                        />
                         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                             <FormField
                                 control={form.control}
@@ -683,6 +575,39 @@ export default function EditCustomerForm({
                                 ))}
                             </div>
                         </div>
+                        {/* <CardHeader>
+                            <CardTitle className="text-center justify-center text-2xl font-bold">
+                                Dokumen Pelanggan {customer?.name}
+                            </CardTitle>
+                            <div className="mt-4">
+                                <Input
+                                    type="file"
+                                    onChange={(e) => {
+                                        const file = e.target.files?.[0];
+                                        if (file) handleAddFile(file);
+                                    }}
+                                />
+                            </div>
+                        </CardHeader> */}
+                        <FormField
+                            control={form.control}
+                            name="image"
+                            render={() => (
+                                <FormItem>
+                                    {/* <FormLabel>Dokumen Pelanggan</FormLabel> */}
+                                    <DocumentEditor
+                                        initialDocuments={[
+                                            ...documentData.initialDocuments,
+                                            ...documentData.newDocuments,
+                                        ]}
+                                        onDocumentsChange={
+                                            handleDocumentsChange
+                                        }
+                                        dataName={`Pelanggan ${customer?.name}`}
+                                    />
+                                </FormItem>
+                            )}
+                        />
                         <Button type="submit" disabled={isPending}>
                             {isPending ? (
                                 <span className="flex items-center flex-row gap-2">

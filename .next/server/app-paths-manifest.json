@@ -1,4 +1,7 @@
 {
   "/api/customers/[id]/route": "app/api/customers/[id]/route.js",
-  "/dashboard/pelanggan/[pelangganId]/ubah/page": "app/dashboard/pelanggan/[pelangganId]/ubah/page.js"
+  "/dashboard/overview/page": "app/dashboard/overview/page.js",
+  "/dashboard/pelanggan/[pelangganId]/page": "app/dashboard/pelanggan/[pelangganId]/page.js",
+  "/dashboard/pelanggan/[pelangganId]/ubah/page": "app/dashboard/pelanggan/[pelangganId]/ubah/page.js",
+  "/dashboard/pelanggan/page": "app/dashboard/pelanggan/page.js"
 }
