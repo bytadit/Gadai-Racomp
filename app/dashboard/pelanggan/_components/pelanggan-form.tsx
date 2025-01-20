@@ -1,6 +1,7 @@
 'use client';
 import * as React from 'react';
-import { useState, ChangeEvent } from 'react';
+import { useState, ChangeEvent, useEffect } from 'react';
+import { FaWhatsapp } from 'react-icons/fa';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { CircleCheckBig, Plus, Trash2 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
@@ -31,24 +32,26 @@ import { Textarea } from '@/components/ui/textarea';
 import { SpokeSpinner } from '@/components/ui/spinner';
 import { Label } from '@/components/ui/label';
 import { FileUploader } from '@/components/file-uploader';
+import { cn } from '@/lib/utils';
 // import { createCustomer } from '@/lib/actions';
 
-type Phone = {
-    phone_number: string;
-    is_active: boolean;
-};
+// type Phone = {
+//     phone_number: string;
+//     is_active: boolean;
+// };
 type FileWithFileName = {
     file: File; // The actual file object
     fileName: string; // The file name (a string)
 };
 
-const MAX_FILE_SIZE = 5000000;
+const MAX_FILE_SIZE = 2000000;
 const ACCEPTED_IMAGE_TYPES = [
     'image/jpeg',
     'image/jpg',
     'image/png',
     'image/webp',
 ];
+
 const customerSchema = z.object({
     image: z
         .array(
@@ -57,29 +60,61 @@ const customerSchema = z.object({
                 fileName: z.string(), // Ensure it includes the filename
             }),
         )
-        .nonempty('Image is required.')
         .refine(
             (files) => files.every((file) => file.file.size <= MAX_FILE_SIZE),
-            `Max file size is 5MB.`,
+            `Ukuran maksimal file 2MB.`,
         )
         .refine(
             (files) =>
                 files.every((file) =>
                     ACCEPTED_IMAGE_TYPES.includes(file.file.type),
                 ),
-            '.jpg, .jpeg, .png, and .webp files are accepted.',
+            'Hanya format .jpg, .jpeg, .png, and .webp yang diterima.',
         ),
     name: z
         .string()
-        .min(2, {
-            message: 'Nama pelanggan minimal 2 karakter!',
+        .min(3, {
+            message: 'Nama pelanggan minimal 3 karakter!',
         })
         .nonempty({
             message: 'Masukkan nama pelanggan!',
         }),
-    nik: z.string().nonempty({
-        message: 'Masukkan NIK pelanggan!',
-    }),
+    phone_numbers: z
+        .array(
+            z.object({
+                phone_number: z
+                    .string()
+                    .min(5, {
+                        message: 'Nomor telepon minimal 5 digit!',
+                    })
+                    .max(15, { message: 'Nomor telepon maksimal 15 digit!' })
+                    .regex(/^0[0-9]+$/, {
+                        message:
+                            'Nomor telepon harus dimulai dengan 0 dan hanya berisi angka',
+                    })
+                    .nonempty({
+                        message: 'Masukkan nomor telepon pelanggan!',
+                    }),
+                is_active: z.boolean().optional(),
+                is_whatsapp: z.boolean().optional(),
+            }),
+        )
+        .nonempty({ message: 'Masukkan setidaknya satu nomor telepon!' }),
+    nik: z
+        .string()
+        .nonempty({ message: 'Masukkan NIK pelanggan!' })
+        .refine(
+            async (nik) => {
+                const res = await fetch('/api/customers/check-nik', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nik }),
+                });
+                const { isUnique } = await res.json();
+                return isUnique;
+            },
+            { message: 'NIK sudah terdaftar!' },
+        ),
     address: z.string().nonempty({
         message: 'Masukkan alamat pelanggan!',
     }),
@@ -101,14 +136,22 @@ export default function CustomerForm() {
             nik: '',
             address: '',
             desc: '',
+            phone_numbers: [
+                { phone_number: '', is_active: false, is_whatsapp: true },
+            ],
             birthdate: undefined,
             gender: undefined,
             status: 'AMAN',
         },
+        mode: 'onBlur', // Validate inputs on blur
+        shouldFocusError: true, // Automatically focus the first error field
     });
-    const [phoneNumbers, setPhoneNumbers] = useState<Phone[]>([
-        { phone_number: '', is_active: true },
-    ]);
+    const [phoneNumbers, setPhoneNumbers] = useState<
+        z.infer<typeof customerSchema>['phone_numbers']
+    >([{ phone_number: '', is_active: true, is_whatsapp: true }]);
+    useEffect(() => {
+        form.setValue('phone_numbers', phoneNumbers);
+    }, [phoneNumbers, form]);
     const router = useRouter();
     const [isPending, setIsPending] = React.useState(false); // ✅ isPending state
 
@@ -116,14 +159,20 @@ export default function CustomerForm() {
         setPhoneNumbers((prevPhones) => {
             const updatedPhones = [...prevPhones];
             updatedPhones[index].phone_number = value;
-            return updatedPhones;
+            return updatedPhones as z.infer<
+                typeof customerSchema
+            >['phone_numbers'];
         });
     };
 
     const handleAddPhone = () => {
         setPhoneNumbers((prevPhones) => [
             ...prevPhones,
-            { phone_number: '', is_active: false },
+            {
+                phone_number: '',
+                is_active: prevPhones.length === 0,
+                is_whatsapp: false,
+            },
         ]);
     };
 
@@ -133,16 +182,30 @@ export default function CustomerForm() {
             if (prevPhones[index].is_active && updatedPhones.length > 0) {
                 updatedPhones[0].is_active = true;
             }
-            return updatedPhones;
+            return updatedPhones as z.infer<
+                typeof customerSchema
+            >['phone_numbers'];
         });
     };
 
     const handleSetActive = (index: number) => {
-        setPhoneNumbers((prevPhones) =>
-            prevPhones.map((phone, i) => ({
-                ...phone,
-                is_active: i === index,
-            })),
+        setPhoneNumbers(
+            (prevPhones) =>
+                prevPhones.map((phone, i) => ({
+                    ...phone,
+                    is_active: i === index,
+                })) as z.infer<typeof customerSchema>['phone_numbers'],
+        );
+    };
+
+    const handleSetWhatsapp = (index: number) => {
+        setPhoneNumbers(
+            (prevPhones) =>
+                prevPhones.map((phone, i) =>
+                    i === index
+                        ? { ...phone, is_whatsapp: !phone.is_whatsapp }
+                        : phone,
+                ) as z.infer<typeof customerSchema>['phone_numbers'],
         );
     };
 
@@ -168,6 +231,7 @@ export default function CustomerForm() {
                 customer_id: customerId,
                 phone_number: phone.phone_number,
                 is_active: phone.is_active,
+                is_whatsapp: phone.is_whatsapp,
             }));
 
             console.log(customerId);
@@ -197,7 +261,7 @@ export default function CustomerForm() {
                         const extension = mimeToExtension[fileType] || 'bin';
                         const fileNameWithExtension = `${fileName}.${extension}`;
                         if (!fileName) {
-                            throw new Error('File name is required.');
+                            throw new Error('Nama wajib diisi!');
                         }
 
                         const formData = new FormData();
@@ -244,7 +308,7 @@ export default function CustomerForm() {
                 console.log('Uploaded Docs:', uploadedDocs);
             }
 
-            router.push('/dashboard/pelanggan');
+            router.push(`/dashboard/pelanggan/${customerId}`);
             toast.success(`Data pelanggan berhasil dibuat!`);
         } catch (error) {
             console.error('Error:', error);
@@ -289,7 +353,7 @@ export default function CustomerForm() {
                                 </div>
                             )}
                         />
-                        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 mt-6">
                             <FormField
                                 control={form.control}
                                 name="name"
@@ -452,59 +516,121 @@ export default function CustomerForm() {
                                 </Label>
                                 {phoneNumbers.map((phone, index) => (
                                     <div
-                                        className="grid grid-cols-8 gap-1.5 mt-4"
+                                        className="flex flex-col gap-2"
                                         key={index}
                                     >
-                                        <Button
-                                            type="button"
-                                            onClick={() =>
-                                                handleSetActive(index)
-                                            }
-                                            variant={
-                                                phone.is_active
-                                                    ? 'success'
-                                                    : 'outline'
-                                            }
-                                        >
-                                            {phone.is_active ? (
-                                                <CircleCheckBig color="white" />
-                                            ) : (
-                                                ''
-                                            )}
-                                        </Button>
-                                        <Input
-                                            className="col-span-6"
-                                            type="text"
-                                            placeholder="Nomor telepon..."
-                                            value={phone.phone_number}
-                                            onChange={(
-                                                e: ChangeEvent<HTMLInputElement>,
-                                            ) =>
-                                                handlePhoneChange(
-                                                    index,
-                                                    e.target.value,
-                                                )
-                                            }
-                                        />
-                                        <div className="col-span-1 ml-2">
-                                            {index > 0 ? (
+                                        <div className="grid grid-cols-8 gap-1 mt-4">
+                                            <div className="flex flex-row gap-1 items-center col-span-2">
                                                 <Button
                                                     type="button"
                                                     onClick={() =>
-                                                        handleRemovePhone(index)
+                                                        handleSetActive(index)
+                                                    }
+                                                    className={cn(
+                                                        'text-xs px-2 py-1.5 w-full',
+                                                        phone.is_active
+                                                            ? 'text-white'
+                                                            : 'text-dark dark:text-white',
+                                                    )}
+                                                    variant={
+                                                        phone.is_active
+                                                            ? 'success'
+                                                            : 'outline'
                                                     }
                                                 >
-                                                    <Trash2 />
+                                                    {phone.is_active ? (
+                                                        <CircleCheckBig
+                                                            color="white"
+                                                            size={16}
+                                                        />
+                                                    ) : (
+                                                        ''
+                                                    )}
                                                 </Button>
-                                            ) : (
                                                 <Button
                                                     type="button"
-                                                    onClick={handleAddPhone}
+                                                    className={cn(
+                                                        'text-xs px-2 py-1.5 w-full',
+                                                        phone.is_whatsapp
+                                                            ? 'text-white'
+                                                            : 'text-dark dark:text-white',
+                                                    )}
+                                                    onClick={() =>
+                                                        handleSetWhatsapp(index)
+                                                    }
+                                                    variant={
+                                                        phone.is_whatsapp
+                                                            ? 'whatsapp'
+                                                            : 'outline'
+                                                    }
                                                 >
-                                                    <Plus />
+                                                    {phone.is_whatsapp ? (
+                                                        <FaWhatsapp
+                                                            color="white"
+                                                            size={16}
+                                                        />
+                                                    ) : (
+                                                        ''
+                                                    )}
                                                 </Button>
-                                            )}
+                                            </div>
+                                            <Input
+                                                className="col-span-5"
+                                                type="text"
+                                                placeholder="Nomor telepon..."
+                                                {...form.register(
+                                                    `phone_numbers.${index}.phone_number`,
+                                                )} // React Hook Form tracking
+                                                name={`phone_numbers.${index}.phone_number`}
+                                                value={phone.phone_number}
+                                                onChange={(
+                                                    e: ChangeEvent<HTMLInputElement>,
+                                                ) => {
+                                                    handlePhoneChange(
+                                                        index,
+                                                        e.target.value,
+                                                    ); // Update local state
+                                                    form.trigger(
+                                                        `phone_numbers.${index}.phone_number`,
+                                                    ); // Trigger validation
+                                                }}
+                                            />
+                                            <div className="col-span-1">
+                                                {index > 0 ? (
+                                                    <Button
+                                                        type="button"
+                                                        className="px-2 py-1.5 w-full"
+                                                        variant="destructive"
+                                                        onClick={() =>
+                                                            handleRemovePhone(
+                                                                index,
+                                                            )
+                                                        }
+                                                    >
+                                                        <Trash2 size={16} />
+                                                    </Button>
+                                                ) : (
+                                                    <Button
+                                                        className="px-2 py-1.5 w-full"
+                                                        type="button"
+                                                        onClick={handleAddPhone}
+                                                    >
+                                                        <Plus size={16} />
+                                                    </Button>
+                                                )}
+                                            </div>
                                         </div>
+                                        {form.formState.errors.phone_numbers?.[
+                                            index
+                                        ]?.phone_number && (
+                                            <p className="text-destructive text-xs font-semibold">
+                                                {
+                                                    form.formState.errors
+                                                        .phone_numbers[index]
+                                                        .phone_number.message
+                                                }
+                                            </p>
+                                        )}
                                     </div>
                                 ))}
                             </div>

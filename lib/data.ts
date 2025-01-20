@@ -12,8 +12,11 @@ export const getCustomers = {
         statuses?: string[];
         search?: string;
     }) {
-        let customers = await prisma.customer.findMany();
-
+        let customers = await prisma.customer.findMany({
+            orderBy: {
+                updatedAt: 'desc', // Sort customers by `updatedAt` in descending order (most recent at the top)
+            },
+        });
         // Filter customers based on selected genders
         if (genders.length > 0) {
             customers = customers.filter((customer) =>

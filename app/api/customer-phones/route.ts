@@ -19,7 +19,7 @@ export async function POST(req: Request) {
                 customerId: phone.customer_id,
                 phone_number: phone.phone_number,
                 is_active: phone.is_active,
-                is_whatsapp: true,
+                is_whatsapp: phone.is_whatsapp,
             })),
         });
 

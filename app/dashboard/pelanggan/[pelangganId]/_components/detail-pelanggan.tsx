@@ -13,9 +13,16 @@ import {
 } from '@/components/ui/carousel';
 import { buttonVariants } from '@/components/ui/button';
 import { SpokeSpinner } from '@/components/ui/spinner';
-import { TriangleAlert, Pencil, PhoneCall, ArrowLeft } from 'lucide-react';
+import {
+    TriangleAlert,
+    Pencil,
+    PhoneCall,
+    ArrowLeft,
+    CheckCircle,
+    CircleX,
+} from 'lucide-react';
 import Link from 'next/link';
-import { cn } from '@/lib/utils';
+import { cn, convertToIndonesianPhone } from '@/lib/utils';
 import ZoomableImage from '@/components/zoomable-image';
 
 type Customer = {
@@ -167,38 +174,49 @@ export default function CustomerDetailPage({
                                 <ul
                                     style={{
                                         listStyleType: 'disc',
-                                        marginLeft: '20px',
                                     }}
                                 >
                                     {customer.customerPhones.map((phone) => (
-                                        <li key={phone.id}>
-                                            <div className="flex justify-between items-center">
-                                                {phone.phone_number}
-                                                {phone.is_active &&
-                                                phone.is_whatsapp ? (
-                                                    <Link
-                                                        target="_blank"
-                                                        href={`https://wa.me/${phone.phone_number}`}
-                                                        className={cn(
-                                                            buttonVariants({
-                                                                variant:
-                                                                    'outline',
-                                                            }),
-                                                        )}
-                                                    >
-                                                        <PhoneCall
-                                                            size={2}
-                                                            color={'green'}
-                                                        />
-                                                        {' WA'}
-                                                    </Link>
-                                                ) : (
-                                                    ''
+                                        <li
+                                            key={phone.id}
+                                            className="flex items-center gap-2 my-1"
+                                        >
+                                            {phone.is_active ? (
+                                                <CheckCircle className="text-green-500 w-auto" />
+                                            ) : (
+                                                <CircleX className="text-red-500 w-auto" />
+                                            )}
+                                            <span
+                                                className={cn(
+                                                    'flex justify-between flex-row items-center w-full max-w-xs',
+                                                    phone.is_active
+                                                        ? 'dark:text-white'
+                                                        : 'text-muted-foreground',
                                                 )}
-                                                {/* {phone.is_active
-                                                    ? 'aktif'
-                                                    : 'tidak aktif'} */}
-                                            </div>
+                                            >
+                                                {phone.phone_number}
+                                            </span>
+                                            {phone.is_whatsapp ? (
+                                                <Link
+                                                    target="_blank"
+                                                    href={`https://wa.me/${convertToIndonesianPhone(phone.phone_number)}`}
+                                                    className={cn(
+                                                        'px-1 py-.5 text-xs',
+                                                        buttonVariants({
+                                                            variant: 'outline',
+                                                            size: 'sm',
+                                                        }),
+                                                    )}
+                                                >
+                                                    <PhoneCall
+                                                        size={2}
+                                                        color={'green'}
+                                                    />
+                                                    {' WA'}
+                                                </Link>
+                                            ) : (
+                                                ''
+                                            )}
                                         </li>
                                     ))}
                                 </ul>

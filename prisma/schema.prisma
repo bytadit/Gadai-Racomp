@@ -112,7 +112,7 @@ model Item {
   value Decimal? @db.Money
   brand String
   serial String? @unique
-  customer Customer @relation(fields: [customerId], references: [id])
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
   customerId Int
   transactions Transaction[]
   itemDocuments ItemDocument[]
@@ -133,8 +133,8 @@ model Transaction {
   waktu_kembali DateTime @db.Timestamp()
   status_transaksi TransactionStatus @default(BERJALAN)
   status_cicilan CicilanStatus @default(AMAN)
-  item Item @relation(fields: [itemId], references: [id])
-  itemId Int
+  item Item? @relation(fields: [itemId], references: [id], onDelete: SetNull)
+  itemId Int?
   cashflows CashFlow[]
   transactionDocuments TransactionDocument[]
   createdAt DateTime @default(now())
@@ -150,8 +150,8 @@ model CashFlow {
   waktu_bayar DateTime
   payment_type PaymentType
   kwitansi_url String? 
-  transaction Transaction @relation(fields: [transactionId], references: [id])
-  transactionId Int
+  transaction Transaction? @relation(fields: [transactionId], references: [id], onDelete: SetNull)
+  transactionId Int?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -167,7 +167,7 @@ model Config {
 
 model ItemDocument {
   id Int @id @default(autoincrement())
-  item Item @relation(fields: [itemId], references: [id])
+  item Item @relation(fields: [itemId], references: [id], onDelete: Cascade)
   itemId Int
   name String?
   doc_type DocumentType
@@ -177,7 +177,7 @@ model ItemDocument {
 }
 model CustomerPhone {
   id Int @id @default(autoincrement())
-  customer Customer @relation(fields: [customerId], references: [id])
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
   customerId Int
   phone_number String
   is_active Boolean @default(false)
@@ -188,7 +188,7 @@ model CustomerPhone {
 
 model CustomerDocument {
   id Int @id @default(autoincrement())
-  customer Customer @relation(fields: [customerId], references: [id])
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
   customerId Int
   name String?
   doc_type DocumentType
@@ -199,7 +199,7 @@ model CustomerDocument {
 
 model TransactionDocument {
   id Int @id @default(autoincrement())
-  transaction Transaction @relation(fields: [transactionId], references: [id])
+  transaction Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
   transactionId Int
   name String?
   doc_type DocumentType

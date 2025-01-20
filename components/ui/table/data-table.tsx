@@ -103,13 +103,21 @@ export function DataTable<TData, TValue>({
 
     return (
         <div className="space-y-4">
-            <ScrollArea className="grid h-[calc(80vh-220px)] rounded-md border md:h-[calc(90dvh-240px)]">
-                <Table>
-                    <TableHeader>
+            <ScrollArea className="grid h-[calc(90vh-120px)] rounded-md border md:h-[calc(90dvh-280px)] relative">
+                <Table className="text-xs">
+                    <TableHeader className="sticky top-0 bg-secondary z-50">
                         {table.getHeaderGroups().map((headerGroup) => (
                             <TableRow key={headerGroup.id}>
                                 {headerGroup.headers.map((header) => (
-                                    <TableHead key={header.id}>
+                                    <TableHead
+                                        key={header.id}
+                                        colSpan={header.colSpan}
+                                        className={
+                                            header.column.getIsPinned()
+                                                ? 'sticky right-0 z-50 bg-secondary'
+                                                : ''
+                                        }
+                                    >
                                         {header.isPlaceholder
                                             ? null
                                             : flexRender(
@@ -132,7 +140,14 @@ export function DataTable<TData, TValue>({
                                     }
                                 >
                                     {row.getVisibleCells().map((cell) => (
-                                        <TableCell key={cell.id}>
+                                        <TableCell
+                                            key={cell.id}
+                                            className={
+                                                cell.column.getIsPinned()
+                                                    ? 'sticky right-0 z-10 bg-secondary'
+                                                    : ''
+                                            }
+                                        >
                                             {flexRender(
                                                 cell.column.columnDef.cell,
                                                 cell.getContext(),

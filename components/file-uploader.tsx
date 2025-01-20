@@ -252,17 +252,11 @@ export function FileUploader(props: FileUploaderProps) {
                 )}
             </Dropzone>
             {files?.length ? (
-                <ScrollArea className="h-fit w-full px-3">
+                <ScrollArea className="h-fit w-full">
                     <div className="max-h-48 space-y-4">
                         {files?.map((file, index) => {
-                            // const initialFile =
-                            //     initialFilesRef.current[index] || null;
-                            // const hasUndo =
-                            //     editingFileIndex === index &&
-                            //     (!!initialFile || initialFile === null);
                             const hasUndo =
                                 initialFilesRef.current[index] !== undefined; // Show Undo only if there's an initial file
-
                             return (
                                 <FileCard
                                     key={index}

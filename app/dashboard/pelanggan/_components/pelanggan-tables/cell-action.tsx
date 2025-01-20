@@ -14,6 +14,7 @@ import { Edit, Info, MoreHorizontal, Trash } from 'lucide-react';
 import { useState } from 'react';
 import type { Customer } from '@prisma/client';
 import { toast } from 'sonner';
+import Link from 'next/link';
 
 type CellActionProps = {
     data: Customer;
@@ -66,19 +67,21 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                     <DropdownMenuLabel>Aksi</DropdownMenuLabel>
-                    <DropdownMenuItem
-                        onClick={() =>
-                            router.push(`/dashboard/pelanggan/${data.id}`)
-                        }
-                    >
-                        <Info className="mr-2 h-4 w-4" /> Detail
+                    <DropdownMenuItem className="p-0">
+                        <Link
+                            href={`/dashboard/pelanggan/${data.id}`}
+                            className="flex flex-row gap-2 items-center w-full px-2 py-1.5"
+                        >
+                            <Info className="h-4 w-4" /> Detail
+                        </Link>
                     </DropdownMenuItem>
-                    <DropdownMenuItem
-                        onClick={() =>
-                            router.push(`/dashboard/pelanggan/${data.id}/ubah`)
-                        }
-                    >
-                        <Edit className="mr-2 h-4 w-4" /> Ubah
+                    <DropdownMenuItem className="p-0">
+                        <Link
+                            href={`/dashboard/pelanggan/${data.id}/ubah`}
+                            className="flex flex-row gap-2 items-center w-full px-2 py-1.5"
+                        >
+                            <Edit className="h-4 w-4" /> Ubah
+                        </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => setOpen(true)}>
                         <Trash className="mr-2 h-4 w-4" /> Hapus
