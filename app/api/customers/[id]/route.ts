@@ -12,6 +12,7 @@ export async function GET(
             include: {
                 customerPhones: true,
                 customerDocuments: true,
+                items: true,
             },
         });
         if (!customer) {

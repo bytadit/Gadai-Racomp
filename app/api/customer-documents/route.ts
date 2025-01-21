@@ -3,7 +3,6 @@ import { prisma } from '@/lib/prisma';
 
 export async function POST(req: Request) {
     try {
-        // Parse the incoming JSON request body
         const { customer_id, file_name, doc_url } = await req.json();
 
         // Validate required fields
