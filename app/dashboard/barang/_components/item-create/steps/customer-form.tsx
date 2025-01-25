@@ -14,16 +14,14 @@ import { Button } from '@/components/ui/button';
 import * as z from 'zod';
 import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { useDebouncedCallback } from 'use-debounce';
 import CustomerCard from './customer-card';
 import { Customer } from '@prisma/client';
 import { SpokeSpinner } from '@/components/ui/spinner';
 import Fuse from 'fuse.js';
-
+// import { useDebouncedCallback } from 'use-debounce';
 import {
     Pagination,
     PaginationContent,
-    PaginationEllipsis,
     PaginationItem,
     PaginationLink,
     PaginationNext,
@@ -32,7 +30,6 @@ import {
 
 type GenderType = z.infer<typeof customerSchema>['gender'];
 const ITEMS_PER_PAGE = 4; // Define the number of items per page
-
 const CustomerStep = () => {
     const [isAddingCustomer, setIsAddingCustomer] = useState<boolean>(() => {
         const storedIsAddingCustomer = localStorage.getItem('isAddingCustomer');
@@ -48,7 +45,6 @@ const CustomerStep = () => {
     const [customers, setCustomers] = useState<Customer[]>([]);
     const [filteredCustomers, setFilteredCustomers] = useState<Customer[]>([]);
     const [currentPage, setCurrentPage] = useState(1);
-
     const [isLoading, setIsLoading] = useState(false);
     const {
         watch,
@@ -68,25 +64,11 @@ const CustomerStep = () => {
         watch,
         setValue,
     });
-    // const fetchCustomers = async (query = '') => {
-    //     setIsLoading(true);
-    //     try {
-    //         const url = query
-    //             ? `/api/customers/search?query=${query}`
-    //             : `/api/customers`; // Fetch all customers if query is empty
-    //         const response = await fetch(url);
-    //         if (!response.ok) {
-    //             throw new Error('Failed to fetch customers');
-    //         }
-    //         const data = await response.json();
-    //         setCustomers(data);
-    //     } catch (error) {
-    //         console.error('Error fetching customers:', error);
-    //     } finally {
-    //         setIsLoading(false);
-    //     }
-    // };
-
+    const totalPages = Math.ceil(filteredCustomers.length / ITEMS_PER_PAGE);
+    const paginatedCustomers = filteredCustomers.slice(
+        (currentPage - 1) * ITEMS_PER_PAGE,
+        currentPage * ITEMS_PER_PAGE,
+    );
     const fetchCustomers = async () => {
         setIsLoading(true);
         try {
@@ -103,66 +85,28 @@ const CustomerStep = () => {
             setIsLoading(false);
         }
     };
-    useEffect(() => {
-        fetchCustomers();
-    }, []);
-
-    // const fuse = new Fuse(customers, {
-    //     keys: ['name'], // keys to search within the customer object
-    //     includeScore: true, // Optional: Include the search score in the results
-    //     isCaseSensitive: false,
-    // });
-
-    // const handleSearch = useDebouncedCallback((query) => {
-    //     fetchCustomers(query);
-    // }, 300);
-
-    // const handleSearch = useDebouncedCallback((query: string) => {
-    //     setSearchQuery(query);
-    //     if (query === '') {
-    //         setFilteredCustomers(customers); // If empty, show all customers
-    //     } else {
-    //         const results = fuse.search(query);
-    //         const items = results.map((result) => result.item);
-    //         setFilteredCustomers(items);
-    //     }
-    // }, 300); // Debounce for 300ms
-
-    // Perform search filtering when query changes
     const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
         const { value } = event.target;
         setSearchQuery(value);
-
         if (value.length === 0) {
             // If search input is empty, show all customers
             setFilteredCustomers(customers);
-            setCurrentPage(1); // Reset to the first page
-
+            setCurrentPage(1);
             return;
         }
-
         const fuse = new Fuse(customers, {
             keys: ['name'],
-            threshold: 0.3, // Adjust threshold for better results
+            threshold: 0.3,
             isCaseSensitive: false,
         });
-
         const results = fuse.search(value);
-        const items = results.map((result) => result.item);
+        const items = results.map((result: { item: Customer }) => result.item);
         setFilteredCustomers(items);
-        setCurrentPage(1); // Reset to the first page after search
+        setCurrentPage(1);
     };
-
     const handlePageChange = (page: number) => {
         setCurrentPage(page);
     };
-
-    // Pagination logic
-    const totalPages = Math.ceil(filteredCustomers.length / ITEMS_PER_PAGE);
-    const paginatedCustomers = filteredCustomers.slice(
-        (currentPage - 1) * ITEMS_PER_PAGE,
-        currentPage * ITEMS_PER_PAGE,
-    );
     const handleCardSelect = (selectedCustomerId: string) => {
         setIsSelecting(selectedCustomerId);
         setTimeout(() => {
@@ -184,13 +128,13 @@ const CustomerStep = () => {
     const handleAddCustomer = () => {
         setIsAddingCustomer(true);
         reset({
-            name: '',
+            customerName: '',
             nik: '',
             birthdate: new Date(),
             status: 'AMAN',
             gender: 'PRIA',
             address: '',
-            desc: '',
+            customerDesc: '',
             phone_numbers: [{ phone_number: '' }],
         });
         setSelectedCustomerId(null);
@@ -200,39 +144,39 @@ const CustomerStep = () => {
     const handleCancelAddCustomer = () => {
         setIsAddingCustomer(false);
         reset({
-            name: '',
+            customerName: '',
             nik: '',
             birthdate: new Date(),
             status: 'AMAN',
             gender: 'PRIA',
             address: '',
-            desc: '',
+            customerDesc: '',
             phone_numbers: [{ phone_number: '' }],
         });
         setSearchQuery('');
         localStorage.setItem('customerId', '');
     };
-
-    // const filteredCustomers = customers.filter(
-    //     (customer) => customer.id.toString() !== selectedCustomerId,
-    // );
-
+    const selectedCustomerFromLocalStorage =
+        localStorage.getItem('selectedCustomer');
+    const selectedCustomer = selectedCustomerFromLocalStorage
+        ? JSON.parse(selectedCustomerFromLocalStorage)
+        : null;
+    useEffect(() => {
+        fetchCustomers();
+    }, []);
     useEffect(() => {
         const customerId = localStorage.getItem('customerId');
         const savedCustomer = localStorage.getItem('selectedCustomer');
-
         if (customerId && customerId !== '') {
             setSelectedCustomerId(customerId);
         }
         if (savedCustomer) {
-            // If selected customer data exists in localStorage, use it
             const parsedCustomer = JSON.parse(savedCustomer);
             if (parsedCustomer && parsedCustomer.id) {
                 setSelectedCustomerId(parsedCustomer.id);
             }
         }
     }, []);
-
     useEffect(() => {
         const customerId = localStorage.getItem('customerId');
         if (!isAddingCustomer && !customerId) {
@@ -243,13 +187,6 @@ const CustomerStep = () => {
             JSON.stringify(isAddingCustomer),
         );
     }, [isAddingCustomer]);
-
-    const selectedCustomerFromLocalStorage =
-        localStorage.getItem('selectedCustomer');
-    const selectedCustomer = selectedCustomerFromLocalStorage
-        ? JSON.parse(selectedCustomerFromLocalStorage)
-        : null;
-
     return (
         <div className="space-y-4 text-start">
             {isAddingCustomer ? (
@@ -268,18 +205,18 @@ const CustomerStep = () => {
                         <div className="space-y-2">
                             <Label
                                 className="mb-2"
-                                htmlFor={register('name').name}
+                                htmlFor={register('customerName').name}
                             >
                                 Nama Pelanggan
                             </Label>
                             <Input
-                                id={register('name').name}
-                                {...register('name')}
-                                value={watch('name') || ''}
+                                id={register('customerName').name}
+                                {...register('customerName')}
+                                value={watch('customerName') || ''}
                             />
-                            {errors.name && (
+                            {errors.customerName && (
                                 <span className="text-sm text-destructive">
-                                    {errors.name.message}
+                                    {errors.customerName.message}
                                 </span>
                             )}
                         </div>
@@ -409,19 +346,19 @@ const CustomerStep = () => {
                         <div className="space-y-2">
                             <Label
                                 className="mb-2"
-                                htmlFor={register('desc').name}
+                                htmlFor={register('customerDesc').name}
                             >
                                 Catatan Pelanggan
                             </Label>
                             <Textarea
-                                id={register('desc').name}
-                                {...register('desc')}
-                                value={watch('desc') || ''}
+                                id={register('customerDesc').name}
+                                {...register('customerDesc')}
+                                value={watch('customerDesc') || ''}
                                 placeholder="Masukkan catatan pelanggan"
                             />
-                            {errors.desc && (
+                            {errors.customerDesc && (
                                 <span className="text-sm text-destructive">
-                                    {errors.desc.message}
+                                    {errors.customerDesc.message}
                                 </span>
                             )}
                         </div>
@@ -690,5 +627,4 @@ const CustomerStep = () => {
         </div>
     );
 };
-
 export default CustomerStep;

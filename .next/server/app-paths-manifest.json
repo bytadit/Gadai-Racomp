@@ -1,4 +1,5 @@
 {
+  "/api/items/check-serial/route": "app/api/items/check-serial/route.js",
   "/api/customers/route": "app/api/customers/route.js",
   "/dashboard/barang/[itemId]/page": "app/dashboard/barang/[itemId]/page.js"
 }

@@ -5,8 +5,8 @@ import { useStepper, steps, utils } from './itemStepper';
 import { Form } from '@/components/ui/form';
 import { Button } from '@/components/ui/button';
 import CustomerStep from './steps/customer-form';
-import PaymentStep from './steps/item-form';
-import CompleteStep from './steps/review-form';
+import ItemStep from './steps/item-form';
+import ReviewStep from './steps/review-form';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Separator } from '@/components/ui/separator';
@@ -20,7 +20,15 @@ const ItemCreate = () => {
     const stepper = useStepper();
     const stepIds = stepper.all.map((step) => step.id);
     const existingCustomerId = localStorage.getItem('customerId');
-    const isExistingCustomer = existingCustomerId !== null;
+    let isExistingCustomer = false;
+
+    if (stepper.current.id === 'customer') {
+        isExistingCustomer = existingCustomerId !== null;
+    } else if (stepper.current.id === 'item') {
+        isExistingCustomer = false;
+    } else if (stepper.current.id === 'review') {
+        isExistingCustomer = true;
+    }
 
     // State to manage form schema dynamically
     const [formSchema, setFormSchema] = useState(() =>
@@ -76,7 +84,7 @@ const ItemCreate = () => {
     }, [setValue, stepper]);
     const onSubmit = async (values: z.infer<typeof formSchema>) => {
         const currentCustomerId = localStorage.getItem('customerId'); // Dynamically fetch customerId
-        if (currentCustomerId && currentCustomerId === '') {
+        if (currentCustomerId === '') {
             toast.error('Pilih customer dulu!');
             return;
         }
@@ -160,8 +168,8 @@ const ItemCreate = () => {
                 <div className="space-y-4">
                     {stepper.switch({
                         customer: () => <CustomerStep />,
-                        payment: () => <PaymentStep />,
-                        review: () => <CompleteStep />,
+                        item: () => <ItemStep />,
+                        review: () => <ReviewStep />,
                     })}
                     {!stepper.isLast ? (
                         <div className="flex justify-end gap-4">

@@ -1,6 +1,6 @@
 import * as z from 'zod';
 export const customerSchema = z.object({
-    name: z
+    customerName: z
         .string()
         .min(3, {
             message: 'Nama pelanggan minimal 3 karakter!',
@@ -47,7 +47,7 @@ export const customerSchema = z.object({
     address: z.string().nonempty({
         message: 'Masukkan alamat pelanggan!',
     }),
-    desc: z.string().optional(),
+    customerDesc: z.string().optional(),
     birthdate: z.date({
         required_error: 'Masukkan tanggal lahir pelanggan!',
     }),
@@ -58,9 +58,8 @@ export const customerSchema = z.object({
         required_error: 'Pilih status pelanggan!',
     }),
 });
-const currentYear = new Date().getFullYear();
 export const itemSchema = z.object({
-    name: z
+    itemName: z
         .string()
         .min(3, {
             message: 'Nama barang minimal 3 karakter!',
@@ -68,30 +67,37 @@ export const itemSchema = z.object({
         .nonempty({
             message: 'Masukkan nama barang!',
         }),
-    gender: z.enum(['KENDARAAN', 'OTHER'], {
+    itemType: z.enum(['KENDARAAN', 'OTHER'], {
         required_error: 'Pilih tipe barang!',
     }),
-    desc: z.string().optional(),
-    year: z
-        .number()
-        .int({ message: 'Tahun harus berupa angka bulat!' })
-        .min(1900, { message: 'Tahun tidak boleh kurang dari 1900!' })
-        .max(currentYear, {
-            message: `Tahun tidak boleh lebih dari ${currentYear}!`,
-        })
-        .refine((value) => value <= currentYear, {
-            message: 'Tahun tidak boleh setelah tahun ini.',
-        }),
-    value: z.coerce
+    itemDesc: z.string().optional(),
+    itemYear: z.preprocess(
+        (value) => {
+            if (value === '') return undefined; // Treat empty strings as undefined
+            return Number(value); // Coerce other inputs to numbers
+        },
+        z
+            .number({
+                required_error: 'Tahun tidak boleh kosong!', // Custom error for undefined
+                invalid_type_error:
+                    'Tahun harus berupa angka & tidak boleh kosong!',
+            })
+            .int({ message: 'Tahun harus berupa angka bulat!' })
+            .min(1900, { message: 'Tahun tidak boleh kurang dari 1900!' })
+            .max(new Date().getFullYear(), {
+                message: `Tahun tidak boleh lebih dari ${new Date().getFullYear()}!`,
+            }),
+    ),
+    itemValue: z.coerce
         .number()
         .min(0, { message: 'Nilai barang tidak boleh negatif' })
         .max(1_000_000_000_000_000, {
             message: 'Nilai tidak boleh melebih 1 trilyun!',
         }),
-    address: z.string().nonempty({
+    itemBrand: z.string().nonempty({
         message: 'Masukkan merek barang!',
     }),
-    serial: z
+    itemSerial: z
         .string()
         .nonempty({ message: 'Masukkan serial barang!' })
         .refine(
@@ -107,17 +113,6 @@ export const itemSchema = z.object({
             { message: 'Serial barang sudah pernah terdaftar!' },
         ),
 });
-export const paymentSchema = z.object({
-    cardNumber: z.string().min(16, 'Card number is required'),
-    expirationDate: z.string().min(5, 'Expiration date is required'),
-    cvv: z.string().min(3, 'CVV is required'),
-});
-export const shippingSchema = z.object({
-    address: z.string().min(1, 'Address is required'),
-    city: z.string().min(1, 'City is required'),
-    postalCode: z.string().min(5, 'Postal code is required'),
-});
+
 export type CustomerFormValues = z.infer<typeof customerSchema>;
 export type ItemFormValues = z.infer<typeof itemSchema>;
-export type PaymentFormValues = z.infer<typeof paymentSchema>;
-export type ShippingFormValues = z.infer<typeof shippingSchema>;
