@@ -1,9 +1,9 @@
 {
   "pages": {
-    "/dashboard/pelanggan/page": [
+    "/dashboard/barang/[itemId]/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/dashboard/pelanggan/page.js"
+      "static/chunks/app/dashboard/barang/[itemId]/page.js"
     ],
     "/dashboard/layout": [
       "static/chunks/webpack.js",
@@ -20,31 +20,6 @@
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/not-found.js"
-    ],
-    "/dashboard/pelanggan/[pelangganId]/ubah/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/dashboard/pelanggan/[pelangganId]/ubah/page.js"
-    ],
-    "/dashboard/pelanggan/[pelangganId]/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/dashboard/pelanggan/[pelangganId]/page.js"
-    ],
-    "/_not-found/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/_not-found/page.js"
-    ],
-    "/dashboard/barang/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/dashboard/barang/page.js"
-    ],
-    "/dashboard/barang/[itemId]/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/dashboard/barang/[itemId]/page.js"
     ]
   }
 }

@@ -24,7 +24,7 @@ const CustomerCard: React.FC<CustomerCardProps> = ({
 }) => {
     return (
         <Card
-            className={`cursor-pointer p-4 border rounded-md shadow-md hover:shadow-lg ${isSelected ? 'bg-secondary' : ''}`}
+            className={`p-4 my-2 border rounded-md shadow-md hover:shadow-lg ${isSelected ? 'bg-secondary border-2 border-green-500' : ''}`}
             onClick={onClick}
         >
             <div className="flex flex-col space-y-2">

@@ -1,9 +1,4 @@
 {
   "/api/customers/route": "app/api/customers/route.js",
-  "/api/customers/check-nik/route": "app/api/customers/check-nik/route.js",
-  "/dashboard/pelanggan/page": "app/dashboard/pelanggan/page.js",
-  "/dashboard/pelanggan/[pelangganId]/page": "app/dashboard/pelanggan/[pelangganId]/page.js",
-  "/dashboard/barang/page": "app/dashboard/barang/page.js",
-  "/dashboard/barang/[itemId]/page": "app/dashboard/barang/[itemId]/page.js",
-  "/dashboard/pelanggan/[pelangganId]/ubah/page": "app/dashboard/pelanggan/[pelangganId]/ubah/page.js"
+  "/dashboard/barang/[itemId]/page": "app/dashboard/barang/[itemId]/page.js"
 }

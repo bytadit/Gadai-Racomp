@@ -7,7 +7,7 @@ import { CustomerFormValues, customerSchema } from '../zodItemSchemas';
 import DatePicker from '@/components/date-picker';
 import { Label } from '@/components/ui/label';
 import { usePhoneNumbers } from '../hooks/useNewPhoneNumbers';
-import { CircleCheckBig, Plus, Trash2 } from 'lucide-react';
+import { CircleCheckBig, Plus, Trash2, TriangleAlert, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { FaWhatsapp } from 'react-icons/fa';
 import { Button } from '@/components/ui/button';
@@ -17,8 +17,21 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useDebouncedCallback } from 'use-debounce';
 import CustomerCard from './customer-card';
 import { Customer } from '@prisma/client';
+import { SpokeSpinner } from '@/components/ui/spinner';
+import Fuse from 'fuse.js';
+
+import {
+    Pagination,
+    PaginationContent,
+    PaginationEllipsis,
+    PaginationItem,
+    PaginationLink,
+    PaginationNext,
+    PaginationPrevious,
+} from '@/components/ui/pagination';
 
 type GenderType = z.infer<typeof customerSchema>['gender'];
+const ITEMS_PER_PAGE = 4; // Define the number of items per page
 
 const CustomerStep = () => {
     const [isAddingCustomer, setIsAddingCustomer] = useState<boolean>(() => {
@@ -33,6 +46,9 @@ const CustomerStep = () => {
     );
     const [isSelecting, setIsSelecting] = useState<string | null>(null); // Track the selected card being in 'selecting' state
     const [customers, setCustomers] = useState<Customer[]>([]);
+    const [filteredCustomers, setFilteredCustomers] = useState<Customer[]>([]);
+    const [currentPage, setCurrentPage] = useState(1);
+
     const [isLoading, setIsLoading] = useState(false);
     const {
         watch,
@@ -52,31 +68,115 @@ const CustomerStep = () => {
         watch,
         setValue,
     });
-    const fetchCustomers = async (query = '') => {
+    // const fetchCustomers = async (query = '') => {
+    //     setIsLoading(true);
+    //     try {
+    //         const url = query
+    //             ? `/api/customers/search?query=${query}`
+    //             : `/api/customers`; // Fetch all customers if query is empty
+    //         const response = await fetch(url);
+    //         if (!response.ok) {
+    //             throw new Error('Failed to fetch customers');
+    //         }
+    //         const data = await response.json();
+    //         setCustomers(data);
+    //     } catch (error) {
+    //         console.error('Error fetching customers:', error);
+    //     } finally {
+    //         setIsLoading(false);
+    //     }
+    // };
+
+    const fetchCustomers = async () => {
         setIsLoading(true);
         try {
-            const url = query
-                ? `/api/customers/search?query=${query}`
-                : `/api/customers`; // Fetch all customers if query is empty
-            const response = await fetch(url);
+            const response = await fetch('/api/customers');
             if (!response.ok) {
                 throw new Error('Failed to fetch customers');
             }
             const data = await response.json();
             setCustomers(data);
+            setFilteredCustomers(data);
         } catch (error) {
             console.error('Error fetching customers:', error);
         } finally {
             setIsLoading(false);
         }
     };
-    const handleSearch = useDebouncedCallback((query) => {
-        fetchCustomers(query);
-    }, 300);
+    useEffect(() => {
+        fetchCustomers();
+    }, []);
+
+    // const fuse = new Fuse(customers, {
+    //     keys: ['name'], // keys to search within the customer object
+    //     includeScore: true, // Optional: Include the search score in the results
+    //     isCaseSensitive: false,
+    // });
+
+    // const handleSearch = useDebouncedCallback((query) => {
+    //     fetchCustomers(query);
+    // }, 300);
+
+    // const handleSearch = useDebouncedCallback((query: string) => {
+    //     setSearchQuery(query);
+    //     if (query === '') {
+    //         setFilteredCustomers(customers); // If empty, show all customers
+    //     } else {
+    //         const results = fuse.search(query);
+    //         const items = results.map((result) => result.item);
+    //         setFilteredCustomers(items);
+    //     }
+    // }, 300); // Debounce for 300ms
+
+    // Perform search filtering when query changes
+    const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const { value } = event.target;
+        setSearchQuery(value);
+
+        if (value.length === 0) {
+            // If search input is empty, show all customers
+            setFilteredCustomers(customers);
+            setCurrentPage(1); // Reset to the first page
+
+            return;
+        }
+
+        const fuse = new Fuse(customers, {
+            keys: ['name'],
+            threshold: 0.3, // Adjust threshold for better results
+            isCaseSensitive: false,
+        });
+
+        const results = fuse.search(value);
+        const items = results.map((result) => result.item);
+        setFilteredCustomers(items);
+        setCurrentPage(1); // Reset to the first page after search
+    };
+
+    const handlePageChange = (page: number) => {
+        setCurrentPage(page);
+    };
+
+    // Pagination logic
+    const totalPages = Math.ceil(filteredCustomers.length / ITEMS_PER_PAGE);
+    const paginatedCustomers = filteredCustomers.slice(
+        (currentPage - 1) * ITEMS_PER_PAGE,
+        currentPage * ITEMS_PER_PAGE,
+    );
     const handleCardSelect = (selectedCustomerId: string) => {
         setIsSelecting(selectedCustomerId);
         setTimeout(() => {
             setSelectedCustomerId(selectedCustomerId);
+            // Save selected customer data to localStorage
+            const selectedCustomer = customers.find(
+                (customer) => customer.id.toString() === selectedCustomerId,
+            );
+            if (selectedCustomer) {
+                localStorage.setItem(
+                    'selectedCustomer',
+                    JSON.stringify(selectedCustomer),
+                );
+            }
             localStorage.setItem('customerId', selectedCustomerId);
             setIsSelecting(null);
         }, 1000);
@@ -95,6 +195,7 @@ const CustomerStep = () => {
         });
         setSelectedCustomerId(null);
         localStorage.removeItem('customerId');
+        localStorage.removeItem('selectedCustomer');
     };
     const handleCancelAddCustomer = () => {
         setIsAddingCustomer(false);
@@ -112,16 +213,23 @@ const CustomerStep = () => {
         localStorage.setItem('customerId', '');
     };
 
-    const filteredCustomers = customers.filter(
-        (customer) => customer.id.toString() !== selectedCustomerId,
-    );
-    useEffect(() => {
-        fetchCustomers();
-    }, []);
+    // const filteredCustomers = customers.filter(
+    //     (customer) => customer.id.toString() !== selectedCustomerId,
+    // );
+
     useEffect(() => {
         const customerId = localStorage.getItem('customerId');
+        const savedCustomer = localStorage.getItem('selectedCustomer');
+
         if (customerId && customerId !== '') {
             setSelectedCustomerId(customerId);
+        }
+        if (savedCustomer) {
+            // If selected customer data exists in localStorage, use it
+            const parsedCustomer = JSON.parse(savedCustomer);
+            if (parsedCustomer && parsedCustomer.id) {
+                setSelectedCustomerId(parsedCustomer.id);
+            }
         }
     }, []);
 
@@ -136,13 +244,26 @@ const CustomerStep = () => {
         );
     }, [isAddingCustomer]);
 
+    const selectedCustomerFromLocalStorage =
+        localStorage.getItem('selectedCustomer');
+    const selectedCustomer = selectedCustomerFromLocalStorage
+        ? JSON.parse(selectedCustomerFromLocalStorage)
+        : null;
+
     return (
         <div className="space-y-4 text-start">
             {isAddingCustomer ? (
                 <>
-                    <Button type="button" onClick={handleCancelAddCustomer}>
-                        Batal
-                    </Button>
+                    <div className="text-end justify-end">
+                        <Button
+                            type="button"
+                            onClick={handleCancelAddCustomer}
+                            variant={'default'}
+                        >
+                            <X className="h-4 w-4" />
+                            Batal
+                        </Button>
+                    </div>
                     <div className="grid grid-cols-1 gap-6 md:grid-cols-2 mt-6">
                         <div className="space-y-2">
                             <Label
@@ -425,64 +546,141 @@ const CustomerStep = () => {
             ) : (
                 <>
                     <div>
-                        <div>
-                            <Button onClick={handleAddCustomer}>
-                                Tambah Customer
+                        <div className="text-end justify-end">
+                            <Button
+                                onClick={handleAddCustomer}
+                                variant={'default'}
+                            >
+                                <Plus className="h-4 w-4" />
+                                Pelanggan Baru
                             </Button>
                         </div>
+                        {selectedCustomer && selectedCustomer.id && (
+                            <div className="rounded-md my-4">
+                                <Label className="text-sm">
+                                    Pelanggan Terpilih
+                                </Label>
+                                <CustomerCard
+                                    customer={selectedCustomer}
+                                    onClick={() => {}}
+                                    isSelected={true}
+                                />
+                            </div>
+                        )}
                         <div className="space-y-4">
-                            <Label htmlFor="search">Search for Customer</Label>
+                            <Label htmlFor="search">Cari Pelanggan</Label>
                             <Input
                                 id="search"
                                 value={searchQuery}
-                                onChange={(e) => {
-                                    const query = e.target.value;
-                                    setSearchQuery(query);
-                                    handleSearch(query);
-                                }}
-                                placeholder="Search customers"
+                                onChange={handleSearch}
+                                placeholder="Masukkan nama pelanggan..."
                             />
                         </div>
                         {isLoading ? (
-                            <p>Loading...</p>
+                            <div className="w-full min-h-[calc(90dvh-100px)] flex gap-2 mx-auto items-center justify-center">
+                                <SpokeSpinner size="md" />
+                                <span className="text-md font-medium text-muted-foreground">
+                                    Memuat data pelanggan...
+                                </span>
+                            </div>
                         ) : (
                             <div className="mt-4 space-y-4">
-                                {selectedCustomerId && (
-                                    <div className="p-4 rounded-md mb-4">
-                                        <h3 className="font-semibold">
-                                            Selected Customer
-                                        </h3>
-                                        <CustomerCard
-                                            customer={
-                                                customers.find(
-                                                    (customer) =>
-                                                        customer.id.toString() ===
-                                                        selectedCustomerId,
-                                                )!
-                                            }
-                                            onClick={() => {}}
-                                            isSelected={true}
-                                        />
+                                {paginatedCustomers.length > 0 ? (
+                                    <div className="flex flex-col gap-4">
+                                        <div className="grid grid-cols-4 gap-2">
+                                            {paginatedCustomers.map(
+                                                (customer) => (
+                                                    <div
+                                                        key={customer.id}
+                                                        className="col-span-4 md:col-span-2 lg:col-span-1"
+                                                    >
+                                                        <CustomerCard
+                                                            customer={customer}
+                                                            onClick={() =>
+                                                                handleCardSelect(
+                                                                    customer.id.toString(),
+                                                                )
+                                                            }
+                                                            isSelecting={
+                                                                isSelecting ===
+                                                                customer.id.toString()
+                                                            }
+                                                        />
+                                                    </div>
+                                                ),
+                                            )}
+                                        </div>
+                                        <Pagination>
+                                            <PaginationContent>
+                                                <PaginationItem>
+                                                    <PaginationPrevious
+                                                        size={'default'}
+                                                        href="#"
+                                                        onClick={(e) => {
+                                                            e.preventDefault();
+                                                            if (currentPage > 1)
+                                                                handlePageChange(
+                                                                    currentPage -
+                                                                        1,
+                                                                );
+                                                        }}
+                                                    />
+                                                </PaginationItem>
+                                                {Array.from(
+                                                    { length: totalPages },
+                                                    (_, index) => (
+                                                        <PaginationItem
+                                                            key={index}
+                                                        >
+                                                            <PaginationLink
+                                                                href="#"
+                                                                size={'default'}
+                                                                isActive={
+                                                                    currentPage ===
+                                                                    index + 1
+                                                                }
+                                                                onClick={(
+                                                                    e,
+                                                                ) => {
+                                                                    e.preventDefault();
+                                                                    handlePageChange(
+                                                                        index +
+                                                                            1,
+                                                                    );
+                                                                }}
+                                                            >
+                                                                {index + 1}
+                                                            </PaginationLink>
+                                                        </PaginationItem>
+                                                    ),
+                                                )}
+                                                <PaginationItem>
+                                                    <PaginationNext
+                                                        size={'default'}
+                                                        href="#"
+                                                        onClick={(e) => {
+                                                            e.preventDefault();
+                                                            if (
+                                                                currentPage <
+                                                                totalPages
+                                                            )
+                                                                handlePageChange(
+                                                                    currentPage +
+                                                                        1,
+                                                                );
+                                                        }}
+                                                    />
+                                                </PaginationItem>
+                                            </PaginationContent>
+                                        </Pagination>
                                     </div>
-                                )}
-                                {filteredCustomers.length > 0 ? (
-                                    filteredCustomers.map((customer) => (
-                                        <CustomerCard
-                                            key={customer.id}
-                                            customer={customer}
-                                            onClick={() =>
-                                                handleCardSelect(
-                                                    customer.id.toString(),
-                                                )
-                                            }
-                                            isSelecting={
-                                                isSelecting ===
-                                                customer.id.toString()
-                                            }
-                                        />
-                                    ))
                                 ) : (
-                                    <p>No customers found.</p>
+                                    <div className="w-full min-h-[calc(90dvh-100px)] flex flex-row gap-2 mx-auto items-center justify-center">
+                                        <TriangleAlert />
+                                        <span className="text-md font-medium text-muted-foreground">
+                                            Data pelanggan tidak ditemukan!
+                                        </span>
+                                    </div>
                                 )}
                             </div>
                         )}
