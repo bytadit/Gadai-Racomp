@@ -60,12 +60,42 @@ export function FileUploader(props: FileUploaderProps) {
     >(null);
     const initialFilesRef = React.useRef<FileWithFileName[]>(valueProp || []);
 
+    // const handleEditFile = (index: number) => {
+    //     if (!files || files.length <= index) return;
+    //     // setPreviousFile(files[index]);
+    //     setEditingFileIndex(index);
+
+    //     // Simulate a file selection dialog
+    //     const input = document.createElement('input');
+    //     input.type = 'file';
+    //     input.accept = props.accept ? Object.keys(props.accept).join(',') : '*';
+    //     input.onchange = (e: Event) => {
+    //         const target = e.target as HTMLInputElement;
+    //         if (target.files && target.files[0]) {
+    //             const newFile = target.files[0];
+    //             const updatedFiles = [...files];
+    //             updatedFiles[index] = {
+    //                 ...updatedFiles[index],
+    //                 file: newFile,
+    //                 fileName: newFile.name,
+    //                 preview: URL.createObjectURL(newFile),
+    //             };
+    //             setFiles(updatedFiles);
+    //             setEditingFileIndex(index);
+    //         }
+    //     };
+    //     input.click();
+    // };
+
     const handleEditFile = (index: number) => {
         if (!files || files.length <= index) return;
-        // setPreviousFile(files[index]);
-        setEditingFileIndex(index);
 
-        // Simulate a file selection dialog
+        // Revoke the old preview URL before creating a new one
+        const oldPreview = files[index]?.preview;
+        if (oldPreview) {
+            URL.revokeObjectURL(oldPreview);
+        }
+
         const input = document.createElement('input');
         input.type = 'file';
         input.accept = props.accept ? Object.keys(props.accept).join(',') : '*';
@@ -81,7 +111,6 @@ export function FileUploader(props: FileUploaderProps) {
                     preview: URL.createObjectURL(newFile),
                 };
                 setFiles(updatedFiles);
-                setEditingFileIndex(index);
             }
         };
         input.click();
@@ -170,23 +199,35 @@ export function FileUploader(props: FileUploaderProps) {
     }
 
     function onRemove(index: number) {
-        if (!files) return;
+        // if (!files) return;
+        if (!files || files.length <= index) return;
+        // Revoke the preview URL for the file being removed
+        const fileToRemove = files[index];
+        if (fileToRemove?.preview) {
+            URL.revokeObjectURL(fileToRemove.preview);
+        }
         const newFiles = files.filter((_, i) => i !== index);
         setFiles(newFiles);
         onValueChange?.(newFiles);
     }
 
-    // // Revoke preview url when component unmounts
     React.useEffect(() => {
-        return () => {
-            if (!files) return;
-            files.forEach((file) => {
-                if (isFileWithPreview(file)) {
-                    URL.revokeObjectURL(file.preview);
+        if (valueProp) {
+            const hydratedFiles = valueProp.map((file) => {
+                if (file.file && !('preview' in file && file.preview)) {
+                    return {
+                        ...file,
+                        preview: URL.createObjectURL(file.file),
+                    };
                 }
+                return file;
             });
-        };
-    }, []);
+
+            if (JSON.stringify(hydratedFiles) !== JSON.stringify(files)) {
+                setFiles(hydratedFiles);
+            }
+        }
+    }, [valueProp, setFiles]);
 
     const isDisabled = disabled || (files?.length ?? 0) >= maxFiles;
 

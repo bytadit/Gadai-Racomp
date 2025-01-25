@@ -2,6 +2,28 @@ import { NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/prisma';
 
+export async function GET() {
+    try {
+        const customers = await prisma.customer.findMany({
+            select: {
+                id: true,
+                name: true,
+                nik: true,
+                address: true,
+                status: true,
+            },
+        });
+
+        return NextResponse.json(customers);
+    } catch (error) {
+        console.error('Error:', error);
+        return NextResponse.json(
+            { error: 'Failed to fetch customers, please try again later' },
+            { status: 500 },
+        );
+    }
+}
+
 export async function POST(req: Request) {
     try {
         const data = await req.json();

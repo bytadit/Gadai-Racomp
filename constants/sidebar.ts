@@ -22,14 +22,14 @@ export const adminMenuItems: NavItem[] = [
             },
         ],
     },
-    {
-        title: 'Konfigurasi',
-        url: '/dashboard/konfigurasi',
-        icon: 'settings',
-        isActive: false,
-        shortcut: ['k', 'k'],
-        items: [], // mpty array as there are no child items for Dashboard
-    },
+    // {
+    //     title: 'Konfigurasi',
+    //     url: '/dashboard/konfigurasi',
+    //     icon: 'settings',
+    //     isActive: false,
+    //     shortcut: ['k', 'k'],
+    //     items: [], // mpty array as there are no child items for Dashboard
+    // },
 ];
 
 export const userMenuItems: NavItem[] = [
@@ -72,6 +72,14 @@ export const userMenuItems: NavItem[] = [
         icon: 'customer',
         isActive: false,
         shortcut: ['p', 'p'],
+        items: [], // mpty array as there are no child items for Dashboard
+    },
+    {
+        title: 'Konfigurasi',
+        url: '/dashboard/konfigurasi',
+        icon: 'settings',
+        isActive: false,
+        shortcut: ['k', 'k'],
         items: [], // mpty array as there are no child items for Dashboard
     },
 

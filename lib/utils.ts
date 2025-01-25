@@ -66,6 +66,31 @@ export const getAge = (dateStr: string) => {
     }
     return age;
 };
+
+export const formatToIndonesianCurrency = (value: number): string => {
+    return new Intl.NumberFormat('id-ID', {
+        style: 'currency',
+        currency: 'IDR',
+        minimumFractionDigits: 2,
+    }).format(value);
+};
+
+export const simplifyIndonesianValue = (value: number): string => {
+    if (value >= 1_000_000_000) {
+        // Convert to 'M' for billion
+        return `${(value / 1_000_000_000).toFixed(1).replace(/\.0$/, '')}M`;
+    } else if (value >= 1_000_000) {
+        // Convert to 'jt' for million
+        return `${(value / 1_000_000).toFixed(1).replace(/\.0$/, '')}jt`;
+    } else if (value >= 1_000) {
+        // Convert to 'rb' for thousand
+        return `${(value / 1_000).toFixed(1).replace(/\.0$/, '')}rb`;
+    }
+    // Return as is if less than a thousand
+    return `${value}`;
+};
+
+
 export const convertToIndonesianPhone = (phoneNumber: string): string => {
     if (phoneNumber.startsWith('0')) {
         return `62${phoneNumber.slice(1)}`;

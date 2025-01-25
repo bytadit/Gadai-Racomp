@@ -33,15 +33,9 @@ import { SpokeSpinner } from '@/components/ui/spinner';
 import { Label } from '@/components/ui/label';
 import { FileUploader } from '@/components/file-uploader';
 import { cn } from '@/lib/utils';
-// import { createCustomer } from '@/lib/actions';
-
-// type Phone = {
-//     phone_number: string;
-//     is_active: boolean;
-// };
 type FileWithFileName = {
-    file: File; // The actual file object
-    fileName: string; // The file name (a string)
+    file: File;
+    fileName: string;
 };
 
 const MAX_FILE_SIZE = 2000000;
@@ -56,8 +50,8 @@ const customerSchema = z.object({
     image: z
         .array(
             z.object({
-                file: z.instanceof(File), // Ensure it's a `File` instance
-                fileName: z.string(), // Ensure it includes the filename
+                file: z.instanceof(File),
+                fileName: z.string(),
             }),
         )
         .refine(
@@ -143,8 +137,8 @@ export default function CustomerForm() {
             gender: undefined,
             status: 'AMAN',
         },
-        mode: 'onBlur', // Validate inputs on blur
-        shouldFocusError: true, // Automatically focus the first error field
+        mode: 'onBlur',
+        shouldFocusError: true,
     });
     const [phoneNumbers, setPhoneNumbers] = useState<
         z.infer<typeof customerSchema>['phone_numbers']
@@ -153,8 +147,7 @@ export default function CustomerForm() {
         form.setValue('phone_numbers', phoneNumbers);
     }, [phoneNumbers, form]);
     const router = useRouter();
-    const [isPending, setIsPending] = React.useState(false); // ✅ isPending state
-
+    const [isPending, setIsPending] = React.useState(false);
     const handlePhoneChange = (index: number, value: string) => {
         setPhoneNumbers((prevPhones) => {
             const updatedPhones = [...prevPhones];
@@ -164,7 +157,6 @@ export default function CustomerForm() {
             >['phone_numbers'];
         });
     };
-
     const handleAddPhone = () => {
         setPhoneNumbers((prevPhones) => [
             ...prevPhones,
@@ -175,7 +167,6 @@ export default function CustomerForm() {
             },
         ]);
     };
-
     const handleRemovePhone = (index: number) => {
         setPhoneNumbers((prevPhones) => {
             const updatedPhones = prevPhones.filter((_, i) => i !== index);
@@ -187,7 +178,6 @@ export default function CustomerForm() {
             >['phone_numbers'];
         });
     };
-
     const handleSetActive = (index: number) => {
         setPhoneNumbers(
             (prevPhones) =>
@@ -197,7 +187,6 @@ export default function CustomerForm() {
                 })) as z.infer<typeof customerSchema>['phone_numbers'],
         );
     };
-
     const handleSetWhatsapp = (index: number) => {
         setPhoneNumbers(
             (prevPhones) =>
@@ -210,9 +199,8 @@ export default function CustomerForm() {
     };
 
     const onSubmit = async (values: z.infer<typeof customerSchema>) => {
-        setIsPending(true); // Set loading state to true
+        setIsPending(true);
         try {
-            // Saving Customer Data
             const customerResponse = await fetch('/api/customers', {
                 method: 'POST',
                 headers: {
@@ -225,27 +213,19 @@ export default function CustomerForm() {
             }
             const { customer } = await customerResponse.json();
             const customerId = customer.id;
-
-            // Saving Customer Phone Numbers
             const phoneData = phoneNumbers.map((phone) => ({
                 customer_id: customerId,
                 phone_number: phone.phone_number,
                 is_active: phone.is_active,
                 is_whatsapp: phone.is_whatsapp,
             }));
-
-            console.log(customerId);
-
             const phonesResponse = await fetch('/api/customer-phones', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(phoneData),
             });
-
             if (!phonesResponse.ok)
                 throw new Error('Failed to save phone numbers');
-
-            // Saving Customer Documents
             const mimeToExtension: { [key: string]: string } = {
                 'image/jpeg': 'jpg',
                 'image/png': 'png',
@@ -253,9 +233,8 @@ export default function CustomerForm() {
                 'text/plain': 'txt',
             };
             if (values.image && values.image.length > 0) {
-                const uploadedDocs = await Promise.all(
+                await Promise.all(
                     values.image.map(async (file: FileWithFileName) => {
-                        // Correctly using FileWithFileName here
                         const fileName = `Customer-${customerId}_${file.fileName}`; // fileName should be a separate property
                         const fileType = file.file.type; // e.g., "image/jpeg"
                         const extension = mimeToExtension[fileType] || 'bin';
@@ -263,25 +242,20 @@ export default function CustomerForm() {
                         if (!fileName) {
                             throw new Error('Nama wajib diisi!');
                         }
-
                         const formData = new FormData();
-                        formData.append('file', file.file); // Append the actual file (a File object)
-                        formData.append('fileName', fileNameWithExtension); // Append with the correct extension
-
-                        // Upload to the API that handles file storage
+                        formData.append('file', file.file);
+                        formData.append('fileName', fileNameWithExtension);
                         const uploadResponse = await fetch(
                             '/api/customer-documents/upload',
                             {
                                 method: 'POST',
-                                body: formData, // Using FormData to send the file
+                                body: formData,
                             },
                         );
-
                         if (!uploadResponse.ok) {
                             throw new Error('Failed to upload file');
                         }
                         const { publicUrl } = await uploadResponse.json();
-                        // Save file metadata to the database
                         const docResponse = await fetch(
                             '/api/customer-documents',
                             {
@@ -296,18 +270,13 @@ export default function CustomerForm() {
                                 }),
                             },
                         );
-
                         if (!docResponse.ok) {
                             throw new Error('Failed to save file metadata');
                         }
-
                         return docResponse.json();
                     }),
                 );
-
-                console.log('Uploaded Docs:', uploadedDocs);
             }
-
             router.push(`/dashboard/pelanggan/${customerId}`);
             toast.success(`Data pelanggan berhasil dibuat!`);
         } catch (error) {
@@ -318,7 +287,6 @@ export default function CustomerForm() {
             router.refresh();
         }
     };
-
     return (
         <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)}>
@@ -329,6 +297,7 @@ export default function CustomerForm() {
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
+                        {/* Dokumen Pelanggan */}
                         <FormField
                             control={form.control}
                             name="image"
@@ -354,6 +323,7 @@ export default function CustomerForm() {
                             )}
                         />
                         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 mt-6">
+                            {/* Nama Pelanggan */}
                             <FormField
                                 control={form.control}
                                 name="name"
@@ -370,6 +340,7 @@ export default function CustomerForm() {
                                     </FormItem>
                                 )}
                             />
+                            {/* NIK Pelanggan */}
                             <FormField
                                 control={form.control}
                                 name="nik"
@@ -386,6 +357,7 @@ export default function CustomerForm() {
                                     </FormItem>
                                 )}
                             />
+                            {/* Tanggal Lahir */}
                             <FormField
                                 control={form.control}
                                 name="birthdate"
@@ -405,6 +377,7 @@ export default function CustomerForm() {
                                 )}
                             />
                             <div className="grid grid-cols-2 gap-6">
+                                {/* Status */}
                                 <FormField
                                     control={form.control}
                                     name="status"
@@ -441,6 +414,7 @@ export default function CustomerForm() {
                                         </FormItem>
                                     )}
                                 />
+                                {/* Gender */}
                                 <FormField
                                     control={form.control}
                                     name="gender"
@@ -478,6 +452,7 @@ export default function CustomerForm() {
                                     )}
                                 />
                             </div>
+                            {/* Alamat */}
                             <FormField
                                 control={form.control}
                                 name="address"
@@ -494,6 +469,7 @@ export default function CustomerForm() {
                                     </FormItem>
                                 )}
                             />
+                            {/* Catatan */}
                             <FormField
                                 control={form.control}
                                 name="desc"
@@ -510,6 +486,7 @@ export default function CustomerForm() {
                                     </FormItem>
                                 )}
                             />
+                            {/* No Telepon */}
                             <div className="w-full items-center">
                                 <Label className="mb-2" htmlFor="phone_number">
                                     Nomor Telepon
@@ -580,7 +557,7 @@ export default function CustomerForm() {
                                                 placeholder="Nomor telepon..."
                                                 {...form.register(
                                                     `phone_numbers.${index}.phone_number`,
-                                                )} // React Hook Form tracking
+                                                )}
                                                 name={`phone_numbers.${index}.phone_number`}
                                                 value={phone.phone_number}
                                                 onChange={(
@@ -589,10 +566,10 @@ export default function CustomerForm() {
                                                     handlePhoneChange(
                                                         index,
                                                         e.target.value,
-                                                    ); // Update local state
+                                                    );
                                                     form.trigger(
                                                         `phone_numbers.${index}.phone_number`,
-                                                    ); // Trigger validation
+                                                    );
                                                 }}
                                             />
                                             <div className="col-span-1">
