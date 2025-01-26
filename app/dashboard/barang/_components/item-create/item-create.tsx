@@ -12,6 +12,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Separator } from '@/components/ui/separator';
 import { z } from 'zod';
 import { toast } from 'sonner';
+import CompleteStep from './steps/complete-form';
+import { CircleCheck } from 'lucide-react';
 
 const LOCAL_STORAGE_KEY_FORM = 'formData';
 const LOCAL_STORAGE_KEY_STEP = 'currentStep';
@@ -34,6 +36,8 @@ const ItemCreate = () => {
     const [formSchema, setFormSchema] = useState(() =>
         isExistingCustomer ? z.object({}) : stepper.current.schema,
     );
+    const [isSaving, setIsSaving] = useState(false);
+    const [isFinished, setIsFinished] = useState(false);
 
     // Update schema dynamically when `isExistingCustomer` changes
     useEffect(() => {
@@ -89,9 +93,102 @@ const ItemCreate = () => {
             return;
         }
         console.log(`Form values for step ${stepper.current.id}:`, values);
-        if (stepper.isLast) {
-            stepper.reset();
-            localStorage.clear();
+
+        if (stepper.current.id === 'review') {
+            const formData = JSON.parse(
+                localStorage.getItem('formData') || '{}',
+            );
+            const selectedCustomer = JSON.parse(
+                localStorage.getItem('selectedCustomer') || '{}',
+            );
+
+            try {
+                setIsSaving(true);
+
+                let customerId = selectedCustomer.id; // Default to existing customerId
+                if (currentCustomerId == null) {
+                    // POST new customer data
+                    const customerResponse = await fetch('/api/customers', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            name: formData.customerName,
+                            nik: formData.nik,
+                            birthdate: new Date(formData.birthdate),
+                            gender: formData.gender,
+                            status: formData.status,
+                            address: formData.address,
+                            desc: formData.customerDesc,
+                        }),
+                    });
+
+                    if (!customerResponse.ok) {
+                        toast.error('Gagal menyimpan data pelanggan!');
+                        setIsSaving(false);
+                        return;
+                    }
+                    toast.success('Berhasil menyimpan data pelanggan!');
+                    const { customer } = await customerResponse.json();
+                    customerId = customer.id;
+
+                    // POST customer phone numbers
+                    const phoneData = formData.phone_numbers.map(
+                        (phone: any) => ({
+                            customer_id: customerId,
+                            phone_number: phone.phone_number,
+                            is_active: phone.is_active,
+                            is_whatsapp: phone.is_whatsapp,
+                        }),
+                    );
+
+                    const phonesResponse = await fetch('/api/customer-phones', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(phoneData),
+                    });
+
+                    if (!phonesResponse.ok) {
+                        toast.error('Gagal menyimpan data nomor telepon!');
+                        setIsSaving(false);
+                        return;
+                    }
+                    toast.success('Berhasil menyimpan data nomor telepon!');
+                }
+                // POST new item data
+                const itemResponse = await fetch('/api/items', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: formData.itemName,
+                        type: formData.itemType,
+                        desc: formData.itemDesc,
+                        year: formData.itemYear,
+                        value: parseFloat(formData.itemValue),
+                        brand: formData.itemBrand,
+                        serial: formData.itemSerial,
+                        customerId: customerId, // Use the correct customerId (either new or existing)
+                    }),
+                });
+
+                if (!itemResponse.ok) {
+                    toast.error('Gagal menyimpan data barang!');
+                    setIsSaving(false);
+                    return;
+                }
+                const { item } = await itemResponse.json();
+                toast.success('Berhasil menyimpan data barang!');
+
+                // Clear localStorage and move to the next step
+                localStorage.clear();
+                localStorage.setItem('itemId', item.id);
+                stepper.reset();
+                setIsSaving(false);
+                stepper.next();
+                setIsFinished(true);
+            } catch (error: any) {
+                toast.error(error.message || 'Gagal menyimpan data!');
+                setIsSaving(false);
+            }
         } else {
             stepper.next();
         }
@@ -120,11 +217,14 @@ const ItemCreate = () => {
                             <React.Fragment key={step.id}>
                                 <li className="flex items-center gap-4 flex-shrink-0">
                                     <Button
+                                        disabled={isFinished}
                                         type="button"
                                         role="tab"
                                         variant={
                                             index <= currentIndex
-                                                ? 'default'
+                                                ? isFinished
+                                                    ? 'success'
+                                                    : 'default'
                                                 : 'secondary'
                                         }
                                         aria-current={
@@ -146,7 +246,14 @@ const ItemCreate = () => {
                                             stepper.goTo(step.id);
                                         }}
                                     >
-                                        {index + 1}
+                                        {isFinished ? (
+                                            <CircleCheck
+                                                color="white"
+                                                size={32}
+                                            />
+                                        ) : (
+                                            index + 1
+                                        )}
                                     </Button>
                                     <span className="text-sm font-medium">
                                         {step.label}
@@ -156,7 +263,9 @@ const ItemCreate = () => {
                                     <Separator
                                         className={`flex-1 ${
                                             index < currentIndex
-                                                ? 'bg-primary'
+                                                ? isFinished
+                                                    ? 'success'
+                                                    : 'primary'
                                                 : 'bg-muted'
                                         }`}
                                     />
@@ -169,24 +278,26 @@ const ItemCreate = () => {
                     {stepper.switch({
                         customer: () => <CustomerStep />,
                         item: () => <ItemStep />,
-                        review: () => <ReviewStep />,
+                        review: () => <ReviewStep isSaving={isSaving} />,
+                        complete: () => <CompleteStep />,
                     })}
-                    {!stepper.isLast ? (
-                        <div className="flex justify-end gap-4">
-                            <Button
-                                variant="secondary"
-                                onClick={stepper.prev}
-                                disabled={stepper.isFirst}
-                            >
-                                Back
-                            </Button>
-                            <Button type="submit">
-                                {stepper.isLast ? 'Finish' : 'Next'}
-                            </Button>
-                        </div>
-                    ) : (
-                        <Button onClick={stepper.reset}>Reset</Button>
-                    )}
+                    {stepper.current.id !== 'complete' &&
+                        (stepper.current.id !== 'review' ? (
+                            <div className="flex justify-end gap-4">
+                                <Button
+                                    variant="secondary"
+                                    onClick={stepper.prev}
+                                    disabled={stepper.isFirst}
+                                >
+                                    Back
+                                </Button>
+                                {!stepper.isLast && (
+                                    <Button type="submit">Next</Button>
+                                )}
+                            </div>
+                        ) : (
+                            <Button type="submit">Simpan Data</Button>
+                        ))}
                 </div>
             </form>
         </Form>

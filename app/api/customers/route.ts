@@ -5,12 +5,9 @@ import { prisma } from '@/lib/prisma';
 export async function GET() {
     try {
         const customers = await prisma.customer.findMany({
-            select: {
-                id: true,
-                name: true,
-                nik: true,
-                address: true,
-                status: true,
+            include: {
+                customerPhones: true,
+                items: true,
             },
         });
 

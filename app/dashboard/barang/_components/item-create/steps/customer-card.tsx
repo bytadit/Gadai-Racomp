@@ -42,7 +42,10 @@ const CustomerCard: React.FC<CustomerCardProps> = ({
                     <Button type="button" onClick={onClick} className="mt-2">
                         <span className="flex items-center flex-row gap-2">
                             {isSelecting ? (
-                                <SpokeSpinner size="sm" color="white" />
+                                <span className="text-muted-foreground items-center flex flex-row gap-1">
+                                    <SpokeSpinner size="sm" />
+                                    {' Memilih...'}
+                                </span>
                             ) : (
                                 'Pilih'
                             )}

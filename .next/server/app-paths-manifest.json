@@ -1,5 +1,7 @@
 {
   "/api/items/check-serial/route": "app/api/items/check-serial/route.js",
+  "/api/items/route": "app/api/items/route.js",
   "/api/customers/route": "app/api/customers/route.js",
-  "/dashboard/barang/[itemId]/page": "app/dashboard/barang/[itemId]/page.js"
+  "/dashboard/barang/[itemId]/page": "app/dashboard/barang/[itemId]/page.js",
+  "/dashboard/barang/page": "app/dashboard/barang/page.js"
 }

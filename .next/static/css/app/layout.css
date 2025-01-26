@@ -826,6 +826,9 @@ video {
 .col-span-2 {
   grid-column: span 2 / span 2;
 }
+.col-span-3 {
+  grid-column: span 3 / span 3;
+}
 .col-span-4 {
   grid-column: span 4 / span 4;
 }
@@ -1404,6 +1407,9 @@ video {
 .snap-center {
   scroll-snap-align: center;
 }
+.scroll-m-20 {
+  scroll-margin: 5rem;
+}
 .grid-flow-col {
   grid-auto-flow: column;
 }
@@ -1421,6 +1427,9 @@ video {
 }
 .grid-cols-4 {
   grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.grid-cols-5 {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
 }
 .grid-cols-8 {
   grid-template-columns: repeat(8, minmax(0, 1fr));
@@ -1908,6 +1917,9 @@ video {
 .p-6 {
   padding: 1.5rem;
 }
+.p-8 {
+  padding: 2rem;
+}
 .p-\[1px\] {
   padding: 1px;
 }
@@ -2001,6 +2013,9 @@ video {
 .pl-2 {
   padding-left: 0.5rem;
 }
+.pl-2\.5 {
+  padding-left: 0.625rem;
+}
 .pl-3 {
   padding-left: 0.75rem;
 }
@@ -2012,6 +2027,9 @@ video {
 }
 .pr-2 {
   padding-right: 0.5rem;
+}
+.pr-2\.5 {
+  padding-right: 0.625rem;
 }
 .pr-8 {
   padding-right: 2rem;
@@ -2033,12 +2051,6 @@ video {
 }
 .pt-6 {
   padding-top: 1.5rem;
-}
-.pl-2\.5 {
-  padding-left: 0.625rem;
-}
-.pr-2\.5 {
-  padding-right: 0.625rem;
 }
 .text-left {
   text-align: left;
@@ -2515,6 +2527,10 @@ video {
 .after\:w-\[2px\]::after {
   content: var(--tw-content);
   width: 2px;
+}
+
+.first\:mt-0:first-child {
+  margin-top: 0px;
 }
 
 .even\:border-l:nth-child(even) {
@@ -3468,12 +3484,20 @@ video {
     top: 2rem;
   }
 
+  .md\:col-span-1 {
+    grid-column: span 1 / span 1;
+  }
+
   .md\:col-span-2 {
     grid-column: span 2 / span 2;
   }
 
   .md\:col-span-3 {
     grid-column: span 3 / span 3;
+  }
+
+  .md\:col-span-4 {
+    grid-column: span 4 / span 4;
   }
 
   .md\:block {
