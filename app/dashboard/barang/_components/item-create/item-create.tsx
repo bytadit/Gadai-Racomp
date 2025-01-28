@@ -86,6 +86,18 @@ const ItemCreate = () => {
             stepper.goTo(validatedStep);
         }
     }, [setValue, stepper]);
+
+    const handleReset = () => {
+        // Reset the stepper to the first step
+        stepper.goTo(steps[0].id);
+
+        // Clear the form data from local storage
+        localStorage.removeItem(LOCAL_STORAGE_KEY_FORM);
+        localStorage.removeItem(LOCAL_STORAGE_KEY_STEP);
+        localStorage.removeItem('itemId');
+        form.reset();
+    };
+
     const onSubmit = async (values: z.infer<typeof formSchema>) => {
         const currentCustomerId = localStorage.getItem('customerId'); // Dynamically fetch customerId
         if (currentCustomerId === '') {
@@ -279,7 +291,9 @@ const ItemCreate = () => {
                         customer: () => <CustomerStep />,
                         item: () => <ItemStep />,
                         review: () => <ReviewStep isSaving={isSaving} />,
-                        complete: () => <CompleteStep />,
+                        complete: () => (
+                            <CompleteStep handleReset={handleReset} />
+                        ),
                     })}
                     {stepper.current.id !== 'complete' &&
                         (stepper.current.id !== 'review' ? (
@@ -296,7 +310,15 @@ const ItemCreate = () => {
                                 )}
                             </div>
                         ) : (
-                            <Button type="submit">Simpan Data</Button>
+                            <div className="flex justify-end gap-4">
+                                {/* <Button
+                                    variant="secondary"
+                                    onClick={stepper.prev}
+                                >
+                                    Back
+                                </Button> */}
+                                <Button type="submit">Simpan Data</Button>
+                            </div>
                         ))}
                 </div>
             </form>

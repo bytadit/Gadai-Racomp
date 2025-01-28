@@ -793,6 +793,9 @@ video {
 .top-\[50\%\] {
   top: 50%;
 }
+.left-3 {
+  left: 0.75rem;
+}
 .\!z-\[-1\] {
   z-index: -1 !important;
 }
@@ -2052,6 +2055,9 @@ video {
 .pt-6 {
   padding-top: 1.5rem;
 }
+.pl-10 {
+  padding-left: 2.5rem;
+}
 .text-left {
   text-align: left;
 }
@@ -2501,6 +2507,14 @@ video {
 
 .placeholder\:text-muted-foreground::placeholder {
   color: hsl(var(--muted-foreground));
+}
+
+.placeholder\:text-muted-foreground\/50::-moz-placeholder {
+  color: hsl(var(--muted-foreground) / 0.5);
+}
+
+.placeholder\:text-muted-foreground\/50::placeholder {
+  color: hsl(var(--muted-foreground) / 0.5);
 }
 
 .after\:absolute::after {

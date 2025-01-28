@@ -22,7 +22,7 @@ import {
     CircleX,
 } from 'lucide-react';
 import Link from 'next/link';
-import { cn, convertToIndonesianPhone } from '@/lib/utils';
+import { cn, convertToIndonesianPhone, getAge } from '@/lib/utils';
 import ZoomableImage from '@/components/zoomable-image';
 
 type Customer = {
@@ -148,11 +148,10 @@ export default function CustomerDetailPage({
                     </div>
                     <div className="grid grid-cols-3">
                         <div className="py-2 font-semibold col-span-1">
-                            Tanggal Lahir
+                            Usia
                         </div>
                         <div className="py-2 col-span-2">
-                            :{' '}
-                            {new Date(customer.birthdate).toLocaleDateString()}
+                            : {getAge(customer.birthdate)} {' tahun'}
                         </div>
                     </div>
                     <div className="grid grid-cols-3">

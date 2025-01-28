@@ -90,10 +90,28 @@ export const simplifyIndonesianValue = (value: number): string => {
     return `${value}`;
 };
 
-
 export const convertToIndonesianPhone = (phoneNumber: string): string => {
     if (phoneNumber.startsWith('0')) {
         return `62${phoneNumber.slice(1)}`;
     }
     return phoneNumber; // Return unchanged if it doesn't start with 0
 };
+
+// /lib/utils.ts
+export const formatCurrency = (value: number | string): string => {
+    const number =
+        typeof value === 'string'
+            ? Number(value.replace(/[^0-9]/g, ''))
+            : value;
+
+    if (isNaN(number)) return '';
+
+    return new Intl.NumberFormat('id-ID').format(number);
+};
+
+export const parseCurrency = (value: string | number): number => {
+    // Konversi ke string terlebih dahulu
+    const stringValue = typeof value === 'number' ? value.toString() : value;
+    const digitsOnly = stringValue.replace(/[^0-9]/g, '');
+    return Number(digitsOnly) || 0;
+  };
