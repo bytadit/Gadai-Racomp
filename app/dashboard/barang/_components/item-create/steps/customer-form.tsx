@@ -187,6 +187,14 @@ const CustomerStep = () => {
             JSON.stringify(isAddingCustomer),
         );
     }, [isAddingCustomer]);
+    useEffect(() => {
+        if (!watch('birthdate')) {
+            const initialDate = new Date(
+                Date.now() - 1000 * 60 * 60 * 24 * 365 * 18,
+            );
+            setValue('birthdate', initialDate);
+        }
+    }, []);
     return (
         <div className="space-y-4 text-start">
             {isAddingCustomer ? (

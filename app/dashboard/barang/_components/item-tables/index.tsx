@@ -12,7 +12,7 @@ import { Download } from 'lucide-react';
 import { exportTableToCSV } from '@/lib/export';
 import { Button } from '@/components/ui/button';
 import { TYPE_OPTIONS, useItemTableFilters } from './use-item-table-filters';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 type ItemWithCustomer = Item & {
     customer: Customer | null; // Related customer can be null if not present
 };
@@ -34,10 +34,13 @@ export default function ItemTable({
         yearOptions,
         selectedYear,
         setSelectedYear,
-        fetchBrandOptions,
-        brandFilter,
-        setBrandFilter,
+        brandOptions,
+        selectedBrand,
+        setSelectedBrand,
     } = useItemTableFilters();
+    useEffect(() => {
+        setSelectedYear(null);
+    }, [typeFilter, setSelectedYear]);
     const table = useReactTable({
         data,
         columns,
@@ -46,22 +49,6 @@ export default function ItemTable({
         manualPagination: true,
         manualFiltering: true,
     });
-
-    const [brandOptions, setBrandOptions] = useState<
-        { value: string; label: string }[]
-    >([]);
-    useEffect(() => {
-        const loadBrands = async () => {
-            const options = await fetchBrandOptions();
-            setBrandOptions(options);
-        };
-        loadBrands();
-    }, [fetchBrandOptions]);
-
-    const yearOptionsStr = yearOptions.map((year) => ({
-        value: year.toString(), // Convert year to a string
-        label: year.toString(), // Optionally, you can also use 'year' as a label
-    }));
 
     return (
         <div className="space-y-2">
@@ -102,21 +89,32 @@ export default function ItemTable({
                     filterValue={typeFilter}
                 />
                 {/* Year Filter */}
-                <DataTableFilterBox
-                    filterKey="year"
-                    title="Year"
-                    options={yearOptionsStr}
-                    setFilterValue={setSelectedYear}
-                    filterValue={selectedYear}
-                />
+                {yearOptions.length > 0 && (
+                    <DataTableFilterBox
+                        filterKey="year"
+                        title="Year"
+                        options={yearOptions.map((opt) => ({
+                            value: opt.value.toString(), // Convert number to string
+                            label: opt.value.toString(),
+                            count: opt.count, // Pass the count from your data
+                        }))}
+                        setFilterValue={setSelectedYear}
+                        filterValue={selectedYear}
+                        isCountVisible={true}
+                    />
+                )}
 
-                {/* Brand Filter */}
                 <DataTableFilterBox
                     filterKey="brand"
                     title="Brand"
-                    options={brandOptions}
-                    setFilterValue={setBrandFilter}
-                    filterValue={brandFilter}
+                    options={brandOptions.map((opt) => ({
+                        value: opt.value.toString(),
+                        label: opt.value.toString(),
+                        count: opt.count,
+                    }))}
+                    setFilterValue={setSelectedBrand}
+                    filterValue={selectedBrand}
+                    isCountVisible={true}
                 />
             </div>
 

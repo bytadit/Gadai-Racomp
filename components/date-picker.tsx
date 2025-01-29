@@ -32,15 +32,18 @@ function idIsoRawDateToValidDate(dateString: string) {
     const isValidDay = parseInt(day) <= 31 && parseInt(day) > 0;
     const date = `${isValidYear ? year : now.getFullYear() - 18}-${
         isValidMonth ? month : now.getMonth() + 1
+        // 18 tahun lalu
     }-${isValidDay ? day : now.getDate()}`;
     return new Date(date);
 }
+const toDate = new Date(Date.now() - 1000 * 60 * 60 * 24 * 365 * 18); // 18 tahun yang lalu
 
 const DatePicker = ({ selectedDate, setSelectedDate }: DatePickerProps) => {
     const [stringDate, setStringDate] = React.useState<string>('');
     const [isOpen, setIsOpen] = React.useState(false);
     const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
         const minDate = new Date(Date.now() - 1000 * 60 * 60 * 24 * 365 * 18);
+        // 18 tahun lalu
         if (e.key === 'Enter' && stringDate.length === 8) {
             e.stopPropagation();
             e.preventDefault();
@@ -74,6 +77,12 @@ const DatePicker = ({ selectedDate, setSelectedDate }: DatePickerProps) => {
             });
         }
     };
+    const getValidDefaultMonth = () => {
+        if (!selectedDate || selectedDate > toDate) {
+            return toDate;
+        }
+        return selectedDate;
+    };
     return (
         <Popover onOpenChange={setIsOpen} open={isOpen}>
             <PopoverTrigger asChild>
@@ -102,9 +111,7 @@ const DatePicker = ({ selectedDate, setSelectedDate }: DatePickerProps) => {
                     required
                     fromYear={new Date().getFullYear() - 100}
                     mode="single"
-                    toDate={
-                        new Date(Date.now() - 1000 * 60 * 60 * 24 * 365 * 18)
-                    }
+                    toDate={toDate}
                     selected={selectedDate}
                     onSelect={(e) => {
                         setSelectedDate(e);
@@ -112,12 +119,19 @@ const DatePicker = ({ selectedDate, setSelectedDate }: DatePickerProps) => {
                     }}
                     captionLayout="dropdown-buttons"
                     disabled={(date) =>
-                        date > new Date() || date < new Date('1900-01-01')
+                        date > toDate || date < new Date('1900-01-01')
                     }
                     fixedWeeks
-                    defaultMonth={selectedDate}
-                    month={selectedDate}
-                    onMonthChange={setSelectedDate}
+                    defaultMonth={getValidDefaultMonth()}
+                    month={getValidDefaultMonth()}
+                    onMonthChange={(date) => {
+                        // Pastikan tidak bisa navigasi ke bulan setelah toDate
+                        if (date > toDate) {
+                            setSelectedDate(toDate);
+                        } else {
+                            setSelectedDate(date);
+                        }
+                    }}
                 />
             </PopoverContent>
         </Popover>

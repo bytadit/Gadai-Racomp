@@ -24,20 +24,22 @@ import { Options } from 'nuqs';
 import React from 'react';
 
 type FilterOption = {
-    value: string;
+    value: string; // Keep value as string type for compatibility
     label: string;
     icon?: React.ComponentType<{ className?: string }>;
+    count?: number; // Add optional count property
 };
 
 type FilterBoxProps = {
     filterKey: string;
     title: string;
-    options: FilterOption[];
+    options: (FilterOption & { count?: number })[]; // Allow count in options
     setFilterValue: (
         value: string | ((old: string) => string | null) | null,
         options?: Options<any> | undefined,
     ) => Promise<URLSearchParams>;
     filterValue: string;
+    isCountVisible?: boolean; // Add new prop for count visibility
 };
 
 export function DataTableFilterBox({
@@ -46,11 +48,17 @@ export function DataTableFilterBox({
     options,
     setFilterValue,
     filterValue,
-}: FilterBoxProps) {
+    isCountVisible = false, // Default to false
+}: FilterBoxProps & { isCountVisible?: boolean }) {
+    // Convert numeric values to strings for compatibility
+    const stringOptions = options.map((opt) => ({
+        ...opt,
+        value: opt.value.toString(),
+    }));
+
     const selectedValuesSet = React.useMemo(() => {
         if (!filterValue) return new Set<string>();
-        const values = filterValue.split('.');
-        return new Set(values.filter((value) => value !== ''));
+        return new Set(filterValue.split('.'));
     }, [filterValue]);
 
     const handleSelect = (value: string) => {
@@ -118,7 +126,7 @@ export function DataTableFilterBox({
                     <CommandList>
                         <CommandEmpty>No results found.</CommandEmpty>
                         <CommandGroup>
-                            {options.map((option) => (
+                            {stringOptions.map((option) => (
                                 <CommandItem
                                     key={option.value}
                                     onSelect={() => handleSelect(option.value)}
@@ -142,7 +150,15 @@ export function DataTableFilterBox({
                                             aria-hidden="true"
                                         />
                                     )}
-                                    <span>{option.label}</span>
+                                    <span className="flex-1">
+                                        {option.label}
+                                    </span>
+                                    {isCountVisible &&
+                                        option.count !== undefined && (
+                                            <span className="ml-2 text-muted-foreground">
+                                                {option.count}
+                                            </span>
+                                        )}
                                 </CommandItem>
                             ))}
                         </CommandGroup>

@@ -14,12 +14,19 @@ import { z } from 'zod';
 import { toast } from 'sonner';
 import CompleteStep from './steps/complete-form';
 import { CircleCheck } from 'lucide-react';
+import { useCustomerCheck } from './hooks/useCustomerCheck';
 
 const LOCAL_STORAGE_KEY_FORM = 'formData';
 const LOCAL_STORAGE_KEY_STEP = 'currentStep';
 
 const ItemCreate = () => {
-    const stepper = useStepper();
+    const { checkCustomer } = useCustomerCheck();
+    const stepper = useStepper(
+        // Type assertion untuk initial step
+        (localStorage.getItem(
+            LOCAL_STORAGE_KEY_STEP,
+        ) as (typeof steps)[number]['id']) || steps[0].id,
+    );
     const stepIds = stepper.all.map((step) => step.id);
     const existingCustomerId = localStorage.getItem('customerId');
     let isExistingCustomer = false;
@@ -62,8 +69,13 @@ const ItemCreate = () => {
         });
         return () => subscription.unsubscribe();
     }, [watch]);
+    // useEffect(() => {
+    //     localStorage.setItem(LOCAL_STORAGE_KEY_STEP, stepper.current.id);
+    // }, [stepper.current.id]);
     useEffect(() => {
-        localStorage.setItem(LOCAL_STORAGE_KEY_STEP, stepper.current.id);
+        if (stepper.current.id) {
+            localStorage.setItem(LOCAL_STORAGE_KEY_STEP, stepper.current.id);
+        }
     }, [stepper.current.id]);
     useEffect(() => {
         const savedData = localStorage.getItem(LOCAL_STORAGE_KEY_FORM);
@@ -77,15 +89,18 @@ const ItemCreate = () => {
                 setValue(key, parsedData[key]);
             });
         }
-        const validatedStep = stepIds.includes(
-            savedStep as (typeof stepIds)[number],
-        )
-            ? (savedStep as (typeof stepIds)[number])
-            : null;
-        if (validatedStep) {
-            stepper.goTo(validatedStep);
+        // Gunakan steps langsung dari import daripada dari stepper
+        const validStepIds = steps.map((step) => step.id);
+        const isValidStep =
+            savedStep && validStepIds.includes(savedStep as any);
+
+        if (isValidStep) {
+            // Tunggu hingga stepper selesai inisialisasi
+            setTimeout(() => {
+                stepper.goTo(savedStep as (typeof validStepIds)[number]);
+            }, 0);
         }
-    }, [setValue, stepper]);
+    }, [setValue, stepper]); // Hapus stepIds dari dependencies
 
     const handleReset = () => {
         // Reset the stepper to the first step
@@ -99,11 +114,7 @@ const ItemCreate = () => {
     };
 
     const onSubmit = async (values: z.infer<typeof formSchema>) => {
-        const currentCustomerId = localStorage.getItem('customerId'); // Dynamically fetch customerId
-        if (currentCustomerId === '') {
-            toast.error('Pilih customer dulu!');
-            return;
-        }
+        if (!checkCustomer()) return;
         console.log(`Form values for step ${stepper.current.id}:`, values);
 
         if (stepper.current.id === 'review') {
@@ -205,7 +216,11 @@ const ItemCreate = () => {
             stepper.next();
         }
     };
-    const currentIndex = utils.getIndex(stepper.current.id);
+    // const currentIndex = utils.getIndex(stepper.current.id);
+    const currentIndex = steps.findIndex(
+        (step) => step.id === stepper.current.id,
+    );
+
     return (
         <Form {...form}>
             <form
@@ -252,7 +267,8 @@ const ItemCreate = () => {
                                         className="flex size-10 items-center justify-center rounded-full"
                                         onClick={async () => {
                                             const valid = await form.trigger();
-                                            if (!valid) return;
+                                            if (!valid || !checkCustomer())
+                                                return;
                                             if (index - currentIndex > 1)
                                                 return;
                                             stepper.goTo(step.id);
@@ -311,12 +327,6 @@ const ItemCreate = () => {
                             </div>
                         ) : (
                             <div className="flex justify-end gap-4">
-                                {/* <Button
-                                    variant="secondary"
-                                    onClick={stepper.prev}
-                                >
-                                    Back
-                                </Button> */}
                                 <Button type="submit">Simpan Data</Button>
                             </div>
                         ))}

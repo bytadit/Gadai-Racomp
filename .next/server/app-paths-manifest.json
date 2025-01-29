@@ -1,5 +1,6 @@
 {
-  "/api/customers/route": "app/api/customers/route.js",
+  "/api/utils/get-distinct-values/route": "app/api/utils/get-distinct-values/route.js",
   "/dashboard/barang/[itemId]/page": "app/dashboard/barang/[itemId]/page.js",
-  "/dashboard/barang/page": "app/dashboard/barang/page.js"
+  "/dashboard/barang/page": "app/dashboard/barang/page.js",
+  "/dashboard/pelanggan/page": "app/dashboard/pelanggan/page.js"
 }
