@@ -35,6 +35,11 @@
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/dashboard/pelanggan/page.js"
+    ],
+    "/dashboard/pelanggan/[pelangganId]/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/dashboard/pelanggan/[pelangganId]/page.js"
     ]
   }
 }

@@ -12,6 +12,7 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 // import { signOut, useSession } from 'next-auth/react';
+import { BadgeCheck, Bell, CreditCard, LogOut } from 'lucide-react';
 export function UserNav() {
     // const { data: session } = useSession();
     return (
@@ -57,21 +58,24 @@ export function UserNav() {
                 <DropdownMenuSeparator />
                 <DropdownMenuGroup>
                     <DropdownMenuItem>
+                        <BadgeCheck className="mr-2" size={'20'} />
                         Profile
                         <DropdownMenuShortcut>⇧⌘P</DropdownMenuShortcut>
                     </DropdownMenuItem>
                     <DropdownMenuItem>
+                        <CreditCard className="mr-2" size={'20'} />
                         Billing
                         <DropdownMenuShortcut>⌘B</DropdownMenuShortcut>
                     </DropdownMenuItem>
                     <DropdownMenuItem>
-                        Settings
-                        <DropdownMenuShortcut>⌘S</DropdownMenuShortcut>
+                        <Bell className="mr-2" size={'20'} />
+                        Notification
+                        <DropdownMenuShortcut>⌘N</DropdownMenuShortcut>
                     </DropdownMenuItem>
-                    <DropdownMenuItem>New Team</DropdownMenuItem>
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => {}}>
+                    <LogOut className="mr-2" size={'20'} />
                     Log out
                     <DropdownMenuShortcut>⇧⌘Q</DropdownMenuShortcut>
                 </DropdownMenuItem>

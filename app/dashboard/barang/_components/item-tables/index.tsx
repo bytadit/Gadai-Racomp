@@ -1,6 +1,7 @@
 'use client';
 
 import { DataTable } from '@/components/ui/table/data-table';
+import { useEffect, useState } from 'react';
 import { DataTableFilterBox } from '@/components/ui/table/data-table-filter-box';
 import { DataTableResetFilter } from '@/components/ui/table/data-table-reset-filter';
 import { DataTableSearch } from '@/components/ui/table/data-table-search';
@@ -12,10 +13,11 @@ import { Download } from 'lucide-react';
 import { exportTableToCSV } from '@/lib/export';
 import { Button } from '@/components/ui/button';
 import { TYPE_OPTIONS, useItemTableFilters } from './use-item-table-filters';
-import { useEffect } from 'react';
+import { SelectionPopup } from '@/components/selection-popup';
 type ItemWithCustomer = Item & {
     customer: Customer | null; // Related customer can be null if not present
 };
+
 export default function ItemTable({
     data,
     totalData,
@@ -41,6 +43,8 @@ export default function ItemTable({
     useEffect(() => {
         setSelectedYear(null);
     }, [typeFilter, setSelectedYear]);
+    const [rowSelection, setRowSelection] = useState({});
+
     const table = useReactTable({
         data,
         columns,
@@ -48,7 +52,18 @@ export default function ItemTable({
         getCoreRowModel: getCoreRowModel(),
         manualPagination: true,
         manualFiltering: true,
+        enableRowSelection: true, // Enable row selection
+        state: {
+            rowSelection,
+        },
+        onRowSelectionChange: setRowSelection,
     });
+    const selectedRows = table.getSelectedRowModel().rows;
+
+    useEffect(() => {
+        console.log('Row Selection:', rowSelection);
+        console.log('Selected Rows:', table.getSelectedRowModel().rows);
+    }, [rowSelection]);
 
     return (
         <div className="space-y-2">
@@ -74,7 +89,6 @@ export default function ItemTable({
                     <Download className="size-4" aria-hidden="true" />
                 </Button>
             </div>
-
             <div className="flex items-center flex-wrap justify-start gap-4">
                 <DataTableResetFilter
                     isFilterActive={isAnyFilterActive}
@@ -117,8 +131,16 @@ export default function ItemTable({
                     isCountVisible={true}
                 />
             </div>
-
             <DataTable columns={columns} data={data} totalItems={totalData} />
+            {Object.keys(rowSelection).length > 0 && (
+                <SelectionPopup
+                    selectedRows={selectedRows}
+                    onDeleteSuccess={() => {
+                        setRowSelection({});
+                        // Add any additional refresh logic here
+                    }}
+                />
+            )}{' '}
         </div>
     );
 }

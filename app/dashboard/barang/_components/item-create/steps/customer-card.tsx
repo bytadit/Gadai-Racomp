@@ -2,14 +2,17 @@ import React from 'react';
 import { Button } from '@/components/ui/button'; // Assuming you have a Button component
 import { Card } from '@/components/ui/card'; // Assuming you have a Card component for styling
 import { SpokeSpinner } from '@/components/ui/spinner';
+import { Badge } from '@/components/ui/badge';
 
 type CustomerCardProps = {
     customer: {
         id: number;
         name: string;
         nik: string;
-        status: string;
+        status: 'AMAN' | 'FAVORIT' | 'RISIKO' | 'MASALAH';
+        gender: string;
         address: string;
+        items: any[];
     };
     onClick: () => void;
     isSelected?: boolean;
@@ -29,15 +32,46 @@ const CustomerCard: React.FC<CustomerCardProps> = ({
         >
             <div className="flex flex-col space-y-2">
                 <h3 className="text-lg font-semibold">{customer.name}</h3>
-                <p>
-                    <strong>NIK:</strong> {customer.nik}
-                </p>
-                <p>
-                    <strong>Status:</strong> {customer.status}
-                </p>
-                <p>
-                    <strong>Alamat:</strong> {customer.address}
-                </p>
+                <div className="grid grid-cols-6 gap-2">
+                    <div className="col-span-1">
+                        <p>
+                            <strong>NIK</strong>
+                        </p>
+                    </div>
+                    <div className="col-span-5">
+                        {': '}
+                        {customer.nik}
+                    </div>
+                    <div className="col-span-1">
+                        <p>
+                            <strong>Gender</strong>
+                        </p>
+                    </div>
+                    <div className="col-span-5">
+                        {': '}
+                        {customer.gender}
+                    </div>
+                    <div className="col-span-1">
+                        <p>
+                            <strong>Status</strong>
+                        </p>
+                    </div>
+                    <div className="col-span-5">
+                        {': '}
+                        <Badge variant={customer.status}>
+                            {customer.status}
+                        </Badge>
+                    </div>
+                    <div className="col-span-1">
+                        <p>
+                            <strong>Alamat</strong>
+                        </p>
+                    </div>
+                    <div className="col-span-5">
+                        {': '}
+                        {customer.address}
+                    </div>
+                </div>
                 {!isSelected && (
                     <Button type="button" onClick={onClick} className="mt-2">
                         <span className="flex items-center flex-row gap-2">

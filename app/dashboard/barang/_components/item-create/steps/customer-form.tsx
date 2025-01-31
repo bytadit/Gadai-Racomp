@@ -78,7 +78,23 @@ const CustomerStep = () => {
             }
             const data = await response.json();
             setCustomers(data);
-            setFilteredCustomers(data);
+            // Check localStorage for existing selected customer
+            const storedCustomer = localStorage.getItem('selectedCustomer');
+            const storedCustomerId = localStorage.getItem('customerId');
+
+            // Filter out selected customer if exists
+            setFilteredCustomers(
+                storedCustomerId
+                    ? data.filter(
+                          (c: Customer) => c.id.toString() !== storedCustomerId,
+                      )
+                    : data,
+            );
+
+            // If stored customer exists, set it in state
+            if (storedCustomer) {
+                setSelectedCustomerId(JSON.parse(storedCustomer).id);
+            }
         } catch (error) {
             console.error('Error fetching customers:', error);
         } finally {
@@ -88,9 +104,17 @@ const CustomerStep = () => {
     const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
         const { value } = event.target;
         setSearchQuery(value);
+        // Get selected customer ID from localStorage if exists
+        const storedCustomerId = localStorage.getItem('customerId');
         if (value.length === 0) {
-            // If search input is empty, show all customers
-            setFilteredCustomers(customers);
+            // Show all customers except selected one
+            setFilteredCustomers(
+                customers.filter(
+                    (customer) =>
+                        !storedCustomerId ||
+                        customer.id.toString() !== storedCustomerId,
+                ),
+            );
             setCurrentPage(1);
             return;
         }
@@ -101,19 +125,27 @@ const CustomerStep = () => {
         });
         const results = fuse.search(value);
         const items = results.map((result: { item: Customer }) => result.item);
-        setFilteredCustomers(items);
+        setFilteredCustomers(
+            items.filter(
+                (customer) =>
+                    !storedCustomerId ||
+                    customer.id.toString() !== storedCustomerId,
+            ),
+        );
         setCurrentPage(1);
     };
     const handlePageChange = (page: number) => {
         setCurrentPage(page);
     };
-    const handleCardSelect = (selectedCustomerId: string) => {
-        setIsSelecting(selectedCustomerId);
+    const handleCardSelect = (newSelectedCustomerId: string) => {
+        setIsSelecting(newSelectedCustomerId);
         setTimeout(() => {
-            setSelectedCustomerId(selectedCustomerId);
-            // Save selected customer data to localStorage
+            const storedCustomerId = localStorage.getItem('customerId');
+            setSelectedCustomerId(newSelectedCustomerId);
+
+            // Save to localStorage
             const selectedCustomer = customers.find(
-                (customer) => customer.id.toString() === selectedCustomerId,
+                (c) => c.id.toString() === newSelectedCustomerId,
             );
             if (selectedCustomer) {
                 localStorage.setItem(
@@ -121,7 +153,15 @@ const CustomerStep = () => {
                     JSON.stringify(selectedCustomer),
                 );
             }
-            localStorage.setItem('customerId', selectedCustomerId);
+            localStorage.setItem('customerId', newSelectedCustomerId);
+            setFilteredCustomers(
+                customers.filter(
+                    (customer) =>
+                        !storedCustomerId ||
+                        customer.id.toString() !== storedCustomerId,
+                ),
+            );
+
             setIsSelecting(null);
         }, 1000);
     };
@@ -254,10 +294,20 @@ const CustomerStep = () => {
                                 Tanggal Lahir
                             </Label>
                             <DatePicker
-                                selectedDate={watch('birthdate') || new Date()}
-                                setSelectedDate={(date) =>
-                                    setValue('birthdate', date as Date)
-                                }
+                                selectedDate={watch('birthdate')}
+                                setSelectedDate={(date) => {
+                                    if (date instanceof Date) {
+                                        // Ensure UTC date is stored
+                                        const utcDate = new Date(
+                                            Date.UTC(
+                                                date.getFullYear(),
+                                                date.getMonth(),
+                                                date.getDate(),
+                                            ),
+                                        );
+                                        setValue('birthdate', utcDate);
+                                    }
+                                }}
                             />
                             {errors.birthdate && (
                                 <span className="text-sm text-destructive">
@@ -532,12 +582,12 @@ const CustomerStep = () => {
                             <div className="mt-4 space-y-4">
                                 {paginatedCustomers.length > 0 ? (
                                     <div className="flex flex-col gap-4">
-                                        <div className="grid grid-cols-4 gap-2">
+                                        <div className="grid grid-cols-2 gap-2">
                                             {paginatedCustomers.map(
                                                 (customer) => (
                                                     <div
                                                         key={customer.id}
-                                                        className="col-span-4 md:col-span-2 lg:col-span-1"
+                                                        className="col-span-2 lg:col-span-1"
                                                     >
                                                         <CustomerCard
                                                             customer={customer}
@@ -557,9 +607,10 @@ const CustomerStep = () => {
                                         </div>
                                         <Pagination>
                                             <PaginationContent>
+                                                {/* Previous Button */}
                                                 <PaginationItem>
                                                     <PaginationPrevious
-                                                        size={'default'}
+                                                        size="default"
                                                         href="#"
                                                         onClick={(e) => {
                                                             e.preventDefault();
@@ -571,37 +622,44 @@ const CustomerStep = () => {
                                                         }}
                                                     />
                                                 </PaginationItem>
-                                                {Array.from(
-                                                    { length: totalPages },
-                                                    (_, index) => (
-                                                        <PaginationItem
-                                                            key={index}
-                                                        >
-                                                            <PaginationLink
-                                                                href="#"
-                                                                size={'default'}
-                                                                isActive={
-                                                                    currentPage ===
-                                                                    index + 1
-                                                                }
-                                                                onClick={(
-                                                                    e,
-                                                                ) => {
-                                                                    e.preventDefault();
-                                                                    handlePageChange(
-                                                                        index +
-                                                                            1,
-                                                                    );
-                                                                }}
+
+                                                {/* Page Numbers - Hidden on mobile */}
+                                                <div className="hidden md:flex">
+                                                    {Array.from(
+                                                        { length: totalPages },
+                                                        (_, index) => (
+                                                            <PaginationItem
+                                                                key={index}
                                                             >
-                                                                {index + 1}
-                                                            </PaginationLink>
-                                                        </PaginationItem>
-                                                    ),
-                                                )}
+                                                                <PaginationLink
+                                                                    href="#"
+                                                                    size="default"
+                                                                    isActive={
+                                                                        currentPage ===
+                                                                        index +
+                                                                            1
+                                                                    }
+                                                                    onClick={(
+                                                                        e,
+                                                                    ) => {
+                                                                        e.preventDefault();
+                                                                        handlePageChange(
+                                                                            index +
+                                                                                1,
+                                                                        );
+                                                                    }}
+                                                                >
+                                                                    {index + 1}
+                                                                </PaginationLink>
+                                                            </PaginationItem>
+                                                        ),
+                                                    )}
+                                                </div>
+
+                                                {/* Next Button */}
                                                 <PaginationItem>
                                                     <PaginationNext
-                                                        size={'default'}
+                                                        size="default"
                                                         href="#"
                                                         onClick={(e) => {
                                                             e.preventDefault();

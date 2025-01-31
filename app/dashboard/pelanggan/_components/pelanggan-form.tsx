@@ -367,9 +367,20 @@ export default function CustomerForm() {
                                         <FormControl>
                                             <DatePicker
                                                 selectedDate={field.value}
-                                                setSelectedDate={(date) =>
-                                                    field.onChange(date)
-                                                }
+                                                setSelectedDate={(date) => {
+                                                    if (date instanceof Date) {
+                                                        // Ensure UTC date is stored
+                                                        const utcDate =
+                                                            new Date(
+                                                                Date.UTC(
+                                                                    date.getFullYear(),
+                                                                    date.getMonth(),
+                                                                    date.getDate(),
+                                                                ),
+                                                            );
+                                                        field.onChange(utcDate);
+                                                    }
+                                                }}
                                             />
                                         </FormControl>
                                         <FormMessage />

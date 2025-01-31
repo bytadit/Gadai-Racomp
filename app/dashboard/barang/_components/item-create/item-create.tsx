@@ -101,7 +101,9 @@ const ItemCreate = () => {
             }, 0);
         }
     }, [setValue, stepper]); // Hapus stepIds dari dependencies
-
+    const [submissionStatus, setSubmissionStatus] = useState<
+        'success' | 'error' | null
+    >(null);
     const handleReset = () => {
         // Reset the stepper to the first step
         stepper.goTo(steps[0].id);
@@ -129,7 +131,7 @@ const ItemCreate = () => {
                 setIsSaving(true);
 
                 let customerId = selectedCustomer.id; // Default to existing customerId
-                if (currentCustomerId == null) {
+                if (customerId == null) {
                     // POST new customer data
                     const customerResponse = await fetch('/api/customers', {
                         method: 'POST',
@@ -146,10 +148,12 @@ const ItemCreate = () => {
                     });
 
                     if (!customerResponse.ok) {
+                        setSubmissionStatus('error');
                         toast.error('Gagal menyimpan data pelanggan!');
                         setIsSaving(false);
                         return;
                     }
+                    setSubmissionStatus('success');
                     toast.success('Berhasil menyimpan data pelanggan!');
                     const { customer } = await customerResponse.json();
                     customerId = customer.id;
@@ -171,10 +175,12 @@ const ItemCreate = () => {
                     });
 
                     if (!phonesResponse.ok) {
+                        setSubmissionStatus('error');
                         toast.error('Gagal menyimpan data nomor telepon!');
                         setIsSaving(false);
                         return;
                     }
+                    setSubmissionStatus('success');
                     toast.success('Berhasil menyimpan data nomor telepon!');
                 }
                 // POST new item data
@@ -194,11 +200,13 @@ const ItemCreate = () => {
                 });
 
                 if (!itemResponse.ok) {
+                    setSubmissionStatus('error');
                     toast.error('Gagal menyimpan data barang!');
                     setIsSaving(false);
                     return;
                 }
                 const { item } = await itemResponse.json();
+                setSubmissionStatus('success');
                 toast.success('Berhasil menyimpan data barang!');
 
                 // Clear localStorage and move to the next step
@@ -209,6 +217,7 @@ const ItemCreate = () => {
                 stepper.next();
                 setIsFinished(true);
             } catch (error: any) {
+                setSubmissionStatus('error');
                 toast.error(error.message || 'Gagal menyimpan data!');
                 setIsSaving(false);
             }
@@ -231,11 +240,11 @@ const ItemCreate = () => {
                     <h2 className="text-lg font-medium">Input Data Barang</h2>
                     <div className="flex items-center gap-2">
                         <span className="text-sm text-muted-foreground">
-                            Tahap {currentIndex + 1} dari {steps.length}
+                            {currentIndex + 1} dari {steps.length}
                         </span>
                     </div>
                 </div>
-                <nav aria-label="Checkout Steps" className="group my-4">
+                <nav aria-label="Item Create Steps" className="group my-4">
                     <ol
                         className="flex items-center justify-between gap-2"
                         aria-orientation="horizontal"
@@ -283,7 +292,7 @@ const ItemCreate = () => {
                                             index + 1
                                         )}
                                     </Button>
-                                    <span className="text-sm font-medium">
+                                    <span className="text-sm font-medium hidden sm:flex">
                                         {step.label}
                                     </span>
                                 </li>
@@ -308,7 +317,10 @@ const ItemCreate = () => {
                         item: () => <ItemStep />,
                         review: () => <ReviewStep isSaving={isSaving} />,
                         complete: () => (
-                            <CompleteStep handleReset={handleReset} />
+                            <CompleteStep
+                                handleReset={handleReset}
+                                status={submissionStatus}
+                            />
                         ),
                     })}
                     {stepper.current.id !== 'complete' &&

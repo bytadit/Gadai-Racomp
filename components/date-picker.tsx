@@ -23,9 +23,9 @@ type DatePickerProps = {
  */
 function idIsoRawDateToValidDate(dateString: string) {
     const now = new Date();
-    const year = dateString.slice(4, 8);
-    const month = dateString.slice(2, 4);
-    const day = dateString.slice(0, 2);
+    const year = dateString.slice(4, 8) || String(now.getUTCFullYear() - 18);
+    const month = dateString.slice(2, 4) || '01';
+    const day = dateString.slice(0, 2) || '01';
     const isValidYear =
         parseInt(year) <= now.getFullYear() && parseInt(year) > 1900;
     const isValidMonth = parseInt(month) <= 12 && parseInt(month) > 0;
@@ -34,9 +34,19 @@ function idIsoRawDateToValidDate(dateString: string) {
         isValidMonth ? month : now.getMonth() + 1
         // 18 tahun lalu
     }-${isValidDay ? day : now.getDate()}`;
-    return new Date(date);
+    // return new Date(date);
+    return new Date(
+        Date.UTC(
+            parseInt(year) || 1945,
+            parseInt(month) - 1 || 0, // Months are 0-based in JS
+            parseInt(day) || 1,
+        ),
+    );
 }
-const toDate = new Date(Date.now() - 1000 * 60 * 60 * 24 * 365 * 18); // 18 tahun yang lalu
+// const toDate = new Date(Date.now() - 1000 * 60 * 60 * 24 * 365 * 18); // 18 tahun yang lalu
+// Fixed toDate calculation in UTC
+const currentYear = new Date().getUTCFullYear();
+const toDate = new Date(Date.UTC(currentYear - 18, 11, 31)); // 31 Dec 18 years ago
 
 const DatePicker = ({ selectedDate, setSelectedDate }: DatePickerProps) => {
     const [stringDate, setStringDate] = React.useState<string>('');
@@ -83,6 +93,18 @@ const DatePicker = ({ selectedDate, setSelectedDate }: DatePickerProps) => {
         }
         return selectedDate;
     };
+    // Fixed calendar handlers
+    const handleCalendarSelect = (date: Date | undefined) => {
+        if (!date) return;
+
+        // Convert to UTC date at midnight
+        const utcDate = new Date(
+            Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()),
+        );
+
+        setSelectedDate(utcDate);
+        setStringDate('');
+    };
     return (
         <Popover onOpenChange={setIsOpen} open={isOpen}>
             <PopoverTrigger asChild>
@@ -95,7 +117,8 @@ const DatePicker = ({ selectedDate, setSelectedDate }: DatePickerProps) => {
                     )}
                 >
                     {selectedDate ? (
-                        format(selectedDate, 'PPP', { locale: id })
+                        // Format in local timezone for display
+                        format(new Date(selectedDate), 'PPP', { locale: id })
                     ) : (
                         <span>Pilih Tanggal</span>
                     )}
@@ -112,24 +135,28 @@ const DatePicker = ({ selectedDate, setSelectedDate }: DatePickerProps) => {
                     fromYear={new Date().getFullYear() - 100}
                     mode="single"
                     toDate={toDate}
-                    selected={selectedDate}
-                    onSelect={(e) => {
-                        setSelectedDate(e);
-                        setStringDate('');
-                    }}
+                    selected={selectedDate ? new Date(selectedDate) : undefined}
+                    onSelect={handleCalendarSelect}
                     captionLayout="dropdown-buttons"
                     disabled={(date) =>
                         date > toDate || date < new Date('1900-01-01')
                     }
                     fixedWeeks
-                    defaultMonth={getValidDefaultMonth()}
                     month={getValidDefaultMonth()}
+                    defaultMonth={toDate}
                     onMonthChange={(date) => {
-                        // Pastikan tidak bisa navigasi ke bulan setelah toDate
                         if (date > toDate) {
                             setSelectedDate(toDate);
                         } else {
-                            setSelectedDate(date);
+                            setSelectedDate(
+                                new Date(
+                                    Date.UTC(
+                                        date.getFullYear(),
+                                        date.getMonth(),
+                                        date.getDate(),
+                                    ),
+                                ),
+                            );
                         }
                     }}
                 />
