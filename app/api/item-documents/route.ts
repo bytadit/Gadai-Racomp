@@ -1,12 +1,11 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-
 export async function POST(req: Request) {
     try {
-        const { itemId, name, doc_url } = await req.json();
+        const { item_id, file_name, doc_url } = await req.json();
 
         // Validate required fields
-        if (!itemId || !name || !doc_url) {
+        if (!item_id || !file_name || !doc_url) {
             return NextResponse.json(
                 { message: 'Missing required fields' },
                 { status: 400 },
@@ -15,8 +14,8 @@ export async function POST(req: Request) {
         // Create a new ItemDocument entry
         const itemDocument = await prisma.itemDocument.create({
             data: {
-                itemId,
-                name,
+                itemId: item_id,
+                name: file_name,
                 doc_type: 'FOTO',
                 doc_url,
             },

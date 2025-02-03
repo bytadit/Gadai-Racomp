@@ -2,6 +2,33 @@ import { NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/prisma';
 
+export async function GET(req: Request) {
+    try {
+        const { searchParams } = new URL(req.url);
+        const storedCustomerId = searchParams.get('storedCustomerId');
+        const customerId = storedCustomerId
+            ? parseInt(storedCustomerId, 10)
+            : null;
+
+        const whereClause = customerId ? { customerId } : {};
+
+        const items = await prisma.item.findMany({
+            where: whereClause,
+            include: {
+                itemDocuments: true,
+                customer: true,
+            },
+        });
+
+        return NextResponse.json(items);
+    } catch (error) {
+        console.error('Error:', error);
+        return NextResponse.json(
+            { error: 'Failed to fetch items, please try again later' },
+            { status: 500 },
+        );
+    }
+}
 export async function POST(req: Request) {
     try {
         const { name, type, desc, year, value, brand, serial, customerId } =

@@ -47,7 +47,6 @@ export async function PUT(
             waktu_kembali,
             status_transaksi,
             status_cicilan,
-            itemId,
         } = await req.json();
 
         if (
@@ -61,9 +60,7 @@ export async function PUT(
             !tanggungan_akhir ||
             !waktu_kembali ||
             !status_transaksi ||
-            !status_cicilan ||
-            !itemId
-        ) {
+            !status_cicilan        ) {
             return NextResponse.json(
                 { message: 'Missing required fields' },
                 { status: 400 },
@@ -85,7 +82,7 @@ export async function PUT(
                 waktu_kembali,
                 status_transaksi,
                 status_cicilan,
-                itemId,
+                updatedAt: new Date(),
             },
         });
 

@@ -21,25 +21,25 @@
       "static/chunks/main-app.js",
       "static/chunks/app/not-found.js"
     ],
-    "/dashboard/barang/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/dashboard/barang/page.js"
-    ],
     "/_not-found/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/_not-found/page.js"
     ],
-    "/dashboard/pelanggan/page": [
+    "/dashboard/barang/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/dashboard/pelanggan/page.js"
+      "static/chunks/app/dashboard/barang/page.js"
     ],
-    "/dashboard/pelanggan/[pelangganId]/page": [
+    "/dashboard/transaksi/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/dashboard/pelanggan/[pelangganId]/page.js"
+      "static/chunks/app/dashboard/transaksi/page.js"
+    ],
+    "/dashboard/transaksi/[transactionId]/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/dashboard/transaksi/[transactionId]/page.js"
     ]
   }
 }

@@ -1,7 +1,10 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
-export async function PUT(req: Request, { params }: { params: { id: string } }) {
+export async function PUT(
+    req: Request,
+    { params }: { params: { id: string } },
+) {
     try {
         const documentId = parseInt(params.id, 10);
         const { name, doc_url, customerId, doc_type } = await req.json();
@@ -20,12 +23,15 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
                 name,
                 doc_url,
                 doc_type,
-                customerId
+                customerId,
             },
         });
 
         return NextResponse.json(
-            { message: 'Document updated successfully', document: updatedDocument },
+            {
+                message: 'Document updated successfully',
+                document: updatedDocument,
+            },
             { status: 200 },
         );
     } catch (error: any) {
@@ -37,7 +43,10 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
     }
 }
 
-export async function DELETE(req: Request, { params }: { params: { id: string } }) {
+export async function DELETE(
+    req: Request,
+    { params }: { params: { id: string } },
+) {
     try {
         const documentId = parseInt(params.id, 10);
 

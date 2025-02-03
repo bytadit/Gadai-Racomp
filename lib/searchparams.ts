@@ -12,6 +12,8 @@ export const searchParams = {
   gender: parseAsString,
   brand: parseAsString,
   status: parseAsString,
+  status_cicilan: parseAsString,
+  status_transaksi: parseAsString,
   year: parseAsString,
   type: parseAsString,
   categories: parseAsString

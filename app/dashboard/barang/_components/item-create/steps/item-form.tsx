@@ -3,7 +3,7 @@
 import React from 'react';
 import { useFormContext } from 'react-hook-form';
 import { Input } from '@/components/ui/input';
-import { ItemFormValues, itemSchema } from '../zodItemSchemas';
+import { ItemFormValues, itemSchema } from '@/lib/zod-schemas';
 import { Label } from '@/components/ui/label';
 import * as z from 'zod';
 import { Textarea } from '@/components/ui/textarea';

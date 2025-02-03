@@ -3,10 +3,10 @@ import { prisma } from '@/lib/prisma';
 
 export async function POST(req: Request) {
     try {
-        const { transactionId, name, doc_url, doc_type } = await req.json();
+        const { transaction_id, file_name, doc_url } = await req.json();
 
         // Validate required fields
-        if (!transactionId || !name || !doc_url || !doc_type) {
+        if (!transaction_id || !file_name || !doc_url) {
             return NextResponse.json(
                 { message: 'Missing required fields' },
                 { status: 400 },
@@ -15,9 +15,9 @@ export async function POST(req: Request) {
         // Create a new transactionDocument entry
         const transactionDocument = await prisma.transactionDocument.create({
             data: {
-                transactionId,
-                name,
-                doc_type,
+                transactionId: transaction_id,
+                name: file_name,
+                doc_type: 'FOTO',
                 doc_url,
             },
         });

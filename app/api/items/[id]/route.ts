@@ -12,6 +12,7 @@ export async function GET(
             include: {
                 transactions: true,
                 itemDocuments: true,
+                customer: true,
             },
         });
         if (!item) {
@@ -35,19 +36,10 @@ export async function PUT(
 ) {
     try {
         const itemId = parseInt(params.id, 10);
-        const { name, type, desc, year, value, brand, serial, customerId } =
+        const { name, type, desc, year, value, brand, serial } =
             await req.json();
 
-        if (
-            !name ||
-            !type ||
-            !desc ||
-            !year ||
-            !value ||
-            !brand ||
-            !serial ||
-            !customerId
-        ) {
+        if (!name || !type || !desc || !year || !value || !brand || !serial) {
             return NextResponse.json(
                 { message: 'Missing required fields' },
                 { status: 400 },
@@ -65,7 +57,7 @@ export async function PUT(
                 value,
                 brand,
                 serial,
-                customerId,
+                updatedAt: new Date(),
             },
         });
 

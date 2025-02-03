@@ -1,7 +1,6 @@
 {
-  "/api/customers/route": "app/api/customers/route.js",
   "/dashboard/barang/[itemId]/page": "app/dashboard/barang/[itemId]/page.js",
   "/dashboard/barang/page": "app/dashboard/barang/page.js",
-  "/dashboard/pelanggan/page": "app/dashboard/pelanggan/page.js",
-  "/dashboard/pelanggan/[pelangganId]/page": "app/dashboard/pelanggan/[pelangganId]/page.js"
+  "/dashboard/transaksi/page": "app/dashboard/transaksi/page.js",
+  "/dashboard/transaksi/[transactionId]/page": "app/dashboard/transaksi/[transactionId]/page.js"
 }

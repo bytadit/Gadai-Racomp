@@ -21,6 +21,15 @@ const badgeVariants = cva(
                 RISIKO: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
                 MASALAH:
                     'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
+                BERJALAN:
+                    'bg-blue-100 text-red-800 dark:bg-red-900 dark:text-red-300',
+                SELESAI:
+                    'bg-green-100 text-red-800 dark:bg-red-900 dark:text-red-300',
+                TERLAMBAT:
+                    'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
+                BERMASALAH:
+                    'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
+                DIJUAL: 'bg-slate-100 text-red-800 dark:bg-red-900 dark:text-red-300',
             },
         },
         defaultVariants: {
@@ -29,9 +38,8 @@ const badgeVariants = cva(
     },
 );
 
-export interface BadgeProps
-    extends React.HTMLAttributes<HTMLDivElement>,
-        VariantProps<typeof badgeVariants> {}
+export type BadgeProps = {} & React.HTMLAttributes<HTMLDivElement> &
+    VariantProps<typeof badgeVariants>;
 
 function Badge({ className, variant, ...props }: BadgeProps) {
     return (

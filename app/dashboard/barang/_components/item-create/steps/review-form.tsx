@@ -77,6 +77,76 @@ const ReviewStep = ({ isSaving }: { isSaving: boolean }) => {
                     <span className="text-sm mt-4">
                         Silakan cek data sebelum menyimpan!
                     </span>
+                    {/* Item Data Card */}
+                    <Card>
+                        <CardHeader className="border-b mb-4">
+                            <CardTitle>
+                                Data{' '}
+                                {itemData?.itemType === 'KENDARAAN'
+                                    ? 'Kendaraan'
+                                    : 'Barang'}
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            {itemData ? (
+                                <div className="grid grid-cols-5 gap-2">
+                                    <span className="col-span-2 md:col-span-1">
+                                        <strong>Nama</strong>{' '}
+                                    </span>
+                                    <span className="col-span-3 md:col-span-4">
+                                        {': '}
+                                        {itemData.itemName}
+                                    </span>
+                                    <span className="col-span-2 md:col-span-1">
+                                        <strong>Tipe</strong>{' '}
+                                    </span>
+                                    <span className="col-span-3 md:col-span-4">
+                                        {': '} {itemData.itemType}
+                                    </span>
+                                    <span className="col-span-2 md:col-span-1">
+                                        <strong>Nilai</strong>{' '}
+                                    </span>
+                                    <span className="col-span-3 md:col-span-4">
+                                        {': '}
+                                        {itemData.itemValue}
+                                    </span>
+                                    <span className="col-span-2 md:col-span-1">
+                                        <strong>Merk</strong>{' '}
+                                    </span>
+                                    <span className="col-span-3 md:col-span-4">
+                                        {': '}
+                                        {itemData.itemBrand}
+                                    </span>
+                                    <span className="col-span-2 md:col-span-1">
+                                        <strong>
+                                            {' '}
+                                            {itemData.itemType === 'KENDARAAN'
+                                                ? 'Nomor Polisi'
+                                                : 'Serial Barang'}
+                                        </strong>{' '}
+                                    </span>
+                                    <span className="col-span-3 md:col-span-4">
+                                        {': '} {itemData.itemSerial}
+                                    </span>
+                                    <span className="col-span-2 md:col-span-1">
+                                        <strong>Tahun</strong>{' '}
+                                    </span>
+                                    <span className="col-span-3 md:col-span-4">
+                                        {': '}
+                                        {itemData.itemYear}
+                                    </span>
+                                    <span className="col-span-2 md:col-span-1">
+                                        <strong>Deskripsi</strong>{' '}
+                                    </span>
+                                    <span className="col-span-3 md:col-span-4">
+                                        {': '} {itemData.itemDesc}
+                                    </span>
+                                </div>
+                            ) : (
+                                <p>Data barang tidak tersedia</p>
+                            )}
+                        </CardContent>
+                    </Card>
                     <Card>
                         <CardHeader className="border-b mb-4">
                             <CardTitle>Data Pelanggan</CardTitle>
@@ -223,76 +293,6 @@ const ReviewStep = ({ isSaving }: { isSaving: boolean }) => {
                                 </div>
                             ) : (
                                 <p>Data pelanggan tidak tersedia</p>
-                            )}
-                        </CardContent>
-                    </Card>
-                    {/* Item Data Card */}
-                    <Card>
-                        <CardHeader className="border-b mb-4">
-                            <CardTitle>
-                                Data{' '}
-                                {itemData?.itemType === 'KENDARAAN'
-                                    ? 'Kendaraan'
-                                    : 'Barang'}
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            {itemData ? (
-                                <div className="grid grid-cols-5 gap-2">
-                                    <span className="col-span-2 md:col-span-1">
-                                        <strong>Nama</strong>{' '}
-                                    </span>
-                                    <span className="col-span-3 md:col-span-4">
-                                        {': '}
-                                        {itemData.itemName}
-                                    </span>
-                                    <span className="col-span-2 md:col-span-1">
-                                        <strong>Tipe</strong>{' '}
-                                    </span>
-                                    <span className="col-span-3 md:col-span-4">
-                                        {': '} {itemData.itemType}
-                                    </span>
-                                    <span className="col-span-2 md:col-span-1">
-                                        <strong>Nilai</strong>{' '}
-                                    </span>
-                                    <span className="col-span-3 md:col-span-4">
-                                        {': '}
-                                        {itemData.itemValue}
-                                    </span>
-                                    <span className="col-span-2 md:col-span-1">
-                                        <strong>Merk</strong>{' '}
-                                    </span>
-                                    <span className="col-span-3 md:col-span-4">
-                                        {': '}
-                                        {itemData.itemBrand}
-                                    </span>
-                                    <span className="col-span-2 md:col-span-1">
-                                        <strong>
-                                            {' '}
-                                            {itemData.itemType === 'KENDARAAN'
-                                                ? 'Nomor Polisi'
-                                                : 'Serial Barang'}
-                                        </strong>{' '}
-                                    </span>
-                                    <span className="col-span-3 md:col-span-4">
-                                        {': '} {itemData.itemSerial}
-                                    </span>
-                                    <span className="col-span-2 md:col-span-1">
-                                        <strong>Tahun</strong>{' '}
-                                    </span>
-                                    <span className="col-span-3 md:col-span-4">
-                                        {': '}
-                                        {itemData.itemYear}
-                                    </span>
-                                    <span className="col-span-2 md:col-span-1">
-                                        <strong>Deskripsi</strong>{' '}
-                                    </span>
-                                    <span className="col-span-3 md:col-span-4">
-                                        {': '} {itemData.itemDesc}
-                                    </span>
-                                </div>
-                            ) : (
-                                <p>Data barang tidak tersedia</p>
                             )}
                         </CardContent>
                     </Card>

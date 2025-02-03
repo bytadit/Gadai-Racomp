@@ -103,9 +103,7 @@ export const formatCurrency = (value: number | string): string => {
         typeof value === 'string'
             ? Number(value.replace(/[^0-9]/g, ''))
             : value;
-
     if (isNaN(number)) return '';
-
     return new Intl.NumberFormat('id-ID').format(number);
 };
 

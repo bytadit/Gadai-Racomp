@@ -141,7 +141,6 @@ export const getItems = {
         const brandsArray = brands ? brands.split('.') : [];
         const yearsArray = years ? years.split('.') : [];
 
-
         const allItems = await this.getAll({
             types: typesArray,
             brands: brandsArray,
@@ -172,7 +171,8 @@ export const getTransactions = {
     // - nilai pinjaman range
     // - waktu pinjam range
     // - jatuh tempo range
-    // - tanggungan akhir
+    // - tanggungan akhir range
+
     // - type
     // - status transaksi
     // - status cicilan
@@ -188,6 +188,9 @@ export const getTransactions = {
         search?: string;
     }) {
         let transactions = await prisma.transaction.findMany({
+            include: {
+                item: true,
+            },
             orderBy: {
                 updatedAt: 'desc',
             },
@@ -235,16 +238,19 @@ export const getTransactions = {
         const transactionStatusArray = transactionStatus
             ? transactionStatus.split('.')
             : [];
-        const allItems = await this.getAll({
+        const allTransactions = await this.getAll({
             types: typesArray,
             cicilanStatus: cicilanStatusArray,
             transactionStatus: transactionStatusArray,
             search,
         });
-        const totalItems = allItems.length;
+        const totalTransactions = allTransactions.length;
         // Pagination logic
         const offset = (page - 1) * limit;
-        const paginatedItems = allItems.slice(offset, offset + limit);
+        const paginatedTransactions = allTransactions.slice(
+            offset,
+            offset + limit,
+        );
         // Mock current time
         const currentTime = new Date().toISOString();
         // Return paginated response
@@ -252,10 +258,10 @@ export const getTransactions = {
             success: true,
             time: currentTime,
             message: 'Transactions Data',
-            total_items: totalItems,
+            total_transactions: totalTransactions,
             offset,
             limit,
-            items: paginatedItems,
+            transactions: paginatedTransactions,
         };
     },
 };
@@ -290,13 +296,13 @@ export const getConfigs = {
         limit?: number;
         search?: string;
     }) {
-        const allItems = await this.getAll({
+        const allConfigs = await this.getAll({
             search,
         });
-        const totalItems = allItems.length;
+        const totalConfigs = allConfigs.length;
         // Pagination logic
         const offset = (page - 1) * limit;
-        const paginatedItems = allItems.slice(offset, offset + limit);
+        const paginatedConfigs = allConfigs.slice(offset, offset + limit);
         // Mock current time
         const currentTime = new Date().toISOString();
         // Return paginated response
@@ -304,10 +310,10 @@ export const getConfigs = {
             success: true,
             time: currentTime,
             message: 'Configs Data',
-            total_items: totalItems,
+            total_configs: totalConfigs,
             offset,
             limit,
-            items: paginatedItems,
+            configs: paginatedConfigs,
         };
     },
 };

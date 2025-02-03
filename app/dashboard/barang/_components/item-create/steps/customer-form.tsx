@@ -3,10 +3,13 @@
 import React, { useEffect, useState } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { Input } from '@/components/ui/input';
-import { CustomerFormValues, customerSchema } from '../zodItemSchemas';
+import {
+    CustomerFormValues,
+    customerSchema,
+} from '../../../../../../lib/zod-schemas';
 import DatePicker from '@/components/date-picker';
 import { Label } from '@/components/ui/label';
-import { usePhoneNumbers } from '../hooks/useNewPhoneNumbers';
+import { usePhoneNumbers } from '../../../../../../hooks/use-phone-numbers';
 import { CircleCheckBig, Plus, Trash2, TriangleAlert, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { FaWhatsapp } from 'react-icons/fa';
@@ -27,6 +30,7 @@ import {
     PaginationNext,
     PaginationPrevious,
 } from '@/components/ui/pagination';
+// import { toast } from 'sonner';
 
 type GenderType = z.infer<typeof customerSchema>['gender'];
 const ITEMS_PER_PAGE = 4; // Define the number of items per page
@@ -161,9 +165,8 @@ const CustomerStep = () => {
                         customer.id.toString() !== storedCustomerId,
                 ),
             );
-
             setIsSelecting(null);
-        }, 1000);
+        }, 1500);
     };
     const handleAddCustomer = () => {
         setIsAddingCustomer(true);

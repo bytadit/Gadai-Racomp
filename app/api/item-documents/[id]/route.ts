@@ -1,12 +1,11 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-
 export async function PUT(req: Request, { params }: { params: { id: string } }) {
     try {
         const itemDocumentId = parseInt(params.id, 10);
         const { name, doc_url, itemId, doc_type } = await req.json();
 
-        if (!name || !doc_url || !itemId || !doc_type) {
+        if (!name || !doc_url) {
             return NextResponse.json(
                 { message: 'Missing required fields' },
                 { status: 400 },

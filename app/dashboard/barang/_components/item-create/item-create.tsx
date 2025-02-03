@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { useStepper, steps, utils } from './itemStepper';
+import { useStepper, steps, utils } from './item-stepper';
 import { Form } from '@/components/ui/form';
 import { Button } from '@/components/ui/button';
 import CustomerStep from './steps/customer-form';
@@ -14,7 +14,7 @@ import { z } from 'zod';
 import { toast } from 'sonner';
 import CompleteStep from './steps/complete-form';
 import { CircleCheck } from 'lucide-react';
-import { useCustomerCheck } from './hooks/useCustomerCheck';
+import { useCustomerCheck } from '../../../../../hooks/use-customer-check';
 
 const LOCAL_STORAGE_KEY_FORM = 'formData';
 const LOCAL_STORAGE_KEY_STEP = 'currentStep';

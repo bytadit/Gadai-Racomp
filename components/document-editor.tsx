@@ -55,10 +55,6 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         const deletedDocuments = documents.filter(
             (doc) => doc.state === 'deleted',
         );
-        console.log('Initial Documents: ', initialDocuments);
-        console.log('New Documents: ', newDocuments);
-        console.log('Edited Documents: ', editedDocuments);
-        console.log('Deleted Documents: ', deletedDocuments);
         onDocumentsChange({ newDocuments, editedDocuments, deletedDocuments });
     }, [documents, onDocumentsChange]);
 

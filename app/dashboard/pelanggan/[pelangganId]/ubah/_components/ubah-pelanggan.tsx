@@ -460,7 +460,7 @@ export default function EditCustomerForm({
                         body: JSON.stringify({
                             name: editedDoc.name,
                             doc_url: publicUrl,
-                            customer_id: customerId,
+                            customerId: customerId,
                             doc_type: 'FOTO',
                         }),
                     },
@@ -488,7 +488,6 @@ export default function EditCustomerForm({
                     );
                 }
             }
-
             router.push(`/dashboard/pelanggan/${params.pelangganId}`);
             toast.success('Data pelanggan berhasil diubah!');
         } catch (error) {
@@ -616,7 +615,7 @@ export default function EditCustomerForm({
                                                         field.onChange
                                                     }
                                                     value={field.value}
-                                                    className="flex space-x-4"
+                                                    className="flex flex-col sm:flex-row gap-2"
                                                 >
                                                     <FormItem className="flex items-center space-x-2">
                                                         <FormControl>
