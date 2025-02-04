@@ -1,6 +1,10 @@
 {
-  "/dashboard/barang/[itemId]/page": "app/dashboard/barang/[itemId]/page.js",
+  "/api/transactions/[id]/route": "app/api/transactions/[id]/route.js",
+  "/api/transaction-documents/upload/route": "app/api/transaction-documents/upload/route.js",
+  "/api/transaction-documents/route": "app/api/transaction-documents/route.js",
   "/dashboard/barang/page": "app/dashboard/barang/page.js",
   "/dashboard/transaksi/page": "app/dashboard/transaksi/page.js",
-  "/dashboard/transaksi/[transactionId]/page": "app/dashboard/transaksi/[transactionId]/page.js"
+  "/dashboard/transaksi/[transactionId]/page": "app/dashboard/transaksi/[transactionId]/page.js",
+  "/dashboard/transaksi/[transactionId]/barang/page": "app/dashboard/transaksi/[transactionId]/barang/page.js",
+  "/dashboard/transaksi/[transactionId]/ubah/page": "app/dashboard/transaksi/[transactionId]/ubah/page.js"
 }

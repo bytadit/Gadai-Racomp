@@ -13,6 +13,7 @@ import {
 import { CheckCircle, CircleX, PhoneCall } from 'lucide-react';
 import Link from 'next/link';
 import { buttonVariants } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 // import { CustomerPhone } from '@prisma/client';
 
 const ReviewStep = ({ isSaving }: { isSaving: boolean }) => {
@@ -35,6 +36,10 @@ const ReviewStep = ({ isSaving }: { isSaving: boolean }) => {
                 name: selectedCustomer.name || 'Data customer tidak tersedia',
                 status:
                     selectedCustomer.status || 'Data customer tidak tersedia',
+                gender:
+                    selectedCustomer.gender || 'Data customer tidak tersedia',
+                nik: selectedCustomer.nik || 'Data customer tidak tersedia',
+                desc: selectedCustomer.desc || 'kosong',
             });
         } else {
             // If customerId doesn't exist, use only formData
@@ -83,7 +88,7 @@ const ReviewStep = ({ isSaving }: { isSaving: boolean }) => {
                 formData.transJatuhTempo || 'Data transaksi tidak tersedia',
             transTanggunganAwal:
                 formData.transTanggunganAwal || 'Data transaksi tidak tersedia',
-            transDesc: formData.transDesc || 'Data transaksi tidak tersedia',
+            transDesc: formData.transDesc || 'kosong',
         });
     }, []);
     return (
@@ -221,7 +226,9 @@ const ReviewStep = ({ isSaving }: { isSaving: boolean }) => {
                                     </span>
                                     <span className="col-span-3 md:col-span-4">
                                         {': '}
-                                        {itemData.itemValue}
+                                        {formatToIndonesianCurrency(
+                                            itemData.itemValue,
+                                        )}
                                     </span>
                                     <span className="col-span-2 md:col-span-1">
                                         <strong>Merk</strong>{' '}
@@ -260,7 +267,7 @@ const ReviewStep = ({ isSaving }: { isSaving: boolean }) => {
                         </CardHeader>
                         <CardContent>
                             {customerData ? (
-                                <div className="grid grid-cols-5">
+                                <div className="grid grid-cols-5 gap-2">
                                     <span className="col-span-2 md:col-span-1">
                                         <strong>Nama</strong>
                                     </span>
@@ -269,28 +276,30 @@ const ReviewStep = ({ isSaving }: { isSaving: boolean }) => {
                                         {customerData.name}
                                     </span>
                                     <span className="col-span-2 md:col-span-1">
+                                        <strong>Gender</strong>
+                                    </span>
+                                    <span className="col-span-3 md:col-span-4">
+                                        {': '}
+                                        {customerData.gender}
+                                    </span>
+                                    <span className="col-span-2 md:col-span-1">
+                                        <strong>NIK</strong>
+                                    </span>
+                                    <span className="col-span-3 md:col-span-4">
+                                        {': '}
+                                        {customerData.nik}
+                                    </span>
+                                    <span className="col-span-2 md:col-span-1">
                                         <strong>Status</strong>
                                     </span>
                                     <span className="col-span-3 md:col-span-4">
                                         {': '}
-                                        {customerData.status}
+                                        <Badge variant={customerData.status}>
+                                            {customerData.status}
+                                        </Badge>
                                     </span>
-                                    {customerData.nik && (
+                                    {customerData.birthdate && (
                                         <>
-                                            <span className="col-span-2 md:col-span-1">
-                                                <strong>Gender</strong>
-                                            </span>
-                                            <span className="col-span-3 md:col-span-4">
-                                                {': '}
-                                                {customerData.gender}
-                                            </span>
-                                            <span className="col-span-2 md:col-span-1">
-                                                <strong>NIK</strong>
-                                            </span>
-                                            <span className="col-span-3 md:col-span-4">
-                                                {': '}
-                                                {customerData.nik}
-                                            </span>
                                             <span className="col-span-2 md:col-span-1">
                                                 <strong>Usia</strong>
                                             </span>
@@ -388,15 +397,15 @@ const ReviewStep = ({ isSaving }: { isSaving: boolean }) => {
                                                     </ul>
                                                 )}
                                             </span>
-                                            <span className="col-span-2 md:col-span-1">
-                                                <strong>Deskripsi</strong>
-                                            </span>
-                                            <span className="col-span-3 md:col-span-4">
-                                                {': '}
-                                                {customerData.desc}
-                                            </span>
                                         </>
                                     )}
+                                    <span className="col-span-2 md:col-span-1">
+                                        <strong>Deskripsi</strong>
+                                    </span>
+                                    <span className="col-span-3 md:col-span-4">
+                                        {': '}
+                                        {customerData.desc}
+                                    </span>
                                 </div>
                             ) : (
                                 <p>Data pelanggan tidak tersedia</p>

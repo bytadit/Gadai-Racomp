@@ -7,20 +7,21 @@ export async function GET(
 ) {
     try {
         const { id } = params;
-        const item = await prisma.transaction.findUnique({
+        const transaction = await prisma.transaction.findUnique({
             where: { id: parseInt(id) },
             include: {
                 cashflows: true,
                 transactionDocuments: true,
+                item: true
             },
         });
-        if (!item) {
+        if (!transaction) {
             return NextResponse.json(
                 { error: 'Transaction not found' },
                 { status: 404 },
             );
         }
-        return NextResponse.json(item, { status: 200 });
+        return NextResponse.json(transaction, { status: 200 });
     } catch (error) {
         console.error('Error:', error);
         return NextResponse.json(

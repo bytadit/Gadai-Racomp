@@ -16,7 +16,6 @@ export async function POST(req: Request) {
             waktu_kembali,
             status_transaksi,
             status_cicilan,
-            itemId,
         } = await req.json();
         if (
             !desc ||
@@ -29,8 +28,7 @@ export async function POST(req: Request) {
             !tanggungan_akhir ||
             !waktu_kembali ||
             !status_transaksi ||
-            !status_cicilan ||
-            !itemId
+            !status_cicilan
         ) {
             return NextResponse.json(
                 { message: 'Missing required fields' },
@@ -50,7 +48,6 @@ export async function POST(req: Request) {
                 waktu_kembali,
                 status_transaksi,
                 status_cicilan,
-                itemId,
             },
             select: { id: true },
         });

@@ -119,10 +119,8 @@ model Item {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
-
 model Transaction {
   id Int @id @default(autoincrement())
-  desc String? @db.Text
   type TransactionType @default(SIMPAN)
   nilai_pinjaman Decimal @db.Money
   persen_tanggungan Decimal @db.Money
@@ -133,6 +131,7 @@ model Transaction {
   waktu_kembali DateTime @db.Timestamp()
   status_transaksi TransactionStatus @default(BERJALAN)
   status_cicilan CicilanStatus @default(AMAN)
+  desc String? @db.Text
   item Item? @relation(fields: [itemId], references: [id], onDelete: SetNull)
   itemId Int?
   cashflows CashFlow[]

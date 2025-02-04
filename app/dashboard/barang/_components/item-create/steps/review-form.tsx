@@ -148,7 +148,7 @@ const ReviewStep = ({ isSaving }: { isSaving: boolean }) => {
                         </CardContent>
                     </Card>
                     <Card>
-                        <CardHeader className="border-b mb-4">
+                        <CardHeader className="border-b mb-4 gap-2">
                             <CardTitle>Data Pelanggan</CardTitle>
                         </CardHeader>
                         <CardContent>

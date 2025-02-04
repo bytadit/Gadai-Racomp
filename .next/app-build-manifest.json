@@ -40,6 +40,16 @@
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/dashboard/transaksi/[transactionId]/page.js"
+    ],
+    "/dashboard/transaksi/[transactionId]/barang/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/dashboard/transaksi/[transactionId]/barang/page.js"
+    ],
+    "/dashboard/transaksi/[transactionId]/ubah/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/dashboard/transaksi/[transactionId]/ubah/page.js"
     ]
   }
 }

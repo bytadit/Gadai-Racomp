@@ -26,7 +26,6 @@ const TransactionCreate = () => {
     const { checkItem } = useItemCheck();
 
     const stepper = useStepper(
-        // Type assertion untuk initial step
         (localStorage.getItem(
             LOCAL_STORAGE_KEY_STEP,
         ) as (typeof steps)[number]['id']) || steps[0].id,
@@ -115,12 +114,19 @@ const TransactionCreate = () => {
     const handleReset = () => {
         // Reset the stepper to the first step
         stepper.goTo(steps[0].id);
-
         // Clear the form data from local storage
         localStorage.removeItem(LOCAL_STORAGE_KEY_FORM);
         localStorage.removeItem(LOCAL_STORAGE_KEY_STEP);
         localStorage.removeItem('customerId');
         localStorage.removeItem('itemId');
+        localStorage.removeItem('transTanggunganAwal');
+        localStorage.removeItem('waktuPinjamNow');
+        localStorage.removeItem('percentOverride');
+        localStorage.removeItem('jatuhTempoOverride');
+        localStorage.removeItem('selectedItem');
+        localStorage.removeItem('selectedCustomer');
+        localStorage.removeItem('isAddingItem');
+        localStorage.removeItem('isAddingCustomer');
         form.reset();
     };
 
@@ -146,7 +152,7 @@ const TransactionCreate = () => {
             try {
                 setIsSaving(true);
                 let customerId = selectedCustomer.id; // Default to existing customerId
-                const itemId = selectedItem.id; // Default to existing customerId
+                let itemId = selectedItem.id; // Default to existing customerId
                 if (customerId == null) {
                     // POST new customer data
                     const customerResponse = await fetch('/api/customers', {
@@ -199,35 +205,64 @@ const TransactionCreate = () => {
                     setSubmissionStatus('success');
                     toast.success('Berhasil menyimpan data nomor telepon!');
                 }
-                // POST new item data
-                const itemResponse = await fetch('/api/items', {
+                if (itemId == null) {
+                    const itemResponse = await fetch('/api/items', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            name: formData.itemName,
+                            type: formData.itemType,
+                            desc: formData.itemDesc,
+                            year: formData.itemYear,
+                            value: parseFloat(formData.itemValue),
+                            brand: formData.itemBrand,
+                            serial: formData.itemSerial,
+                            customerId: customerId, // Use the correct customerId (either new or existing)
+                        }),
+                    });
+    
+                    if (!itemResponse.ok) {
+                        setSubmissionStatus('error');
+                        toast.error('Gagal menyimpan data barang!');
+                        setIsSaving(false);
+                        return;
+                    }
+                    const { item } = await itemResponse.json();
+                    itemId = item.id;
+                    setSubmissionStatus('success');
+                    toast.success('Berhasil menyimpan data barang!');
+                }
+                const transactionResponse = await fetch('/api/transactions', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        name: formData.itemName,
-                        type: formData.itemType,
-                        desc: formData.itemDesc,
-                        year: formData.itemYear,
-                        value: parseFloat(formData.itemValue),
-                        brand: formData.itemBrand,
-                        serial: formData.itemSerial,
-                        customerId: customerId, // Use the correct customerId (either new or existing)
+                        desc: formData.transDesc,
+                        type: formData.transType,
+                        nilai_pinjaman: formData.transNilaiPinjaman,
+                        persen_tanggungan: formData.transPersenTanggungan,
+                        waktu_pinjam: new Date(formData.transWaktuPinjam),
+                        tgl_jatuh_tempo: new Date(formData.transJatuhTempo),
+                        tanggungan_awal: formData.transTanggunganAwal,
+                        tanggungan_akhir: formData.transTanggunganAwal,
+                        waktu_kembali: new Date(formData.transJatuhTempo),
+                        status_transaksi: 'BERJALAN',
+                        status_cicilan: 'AMAN',
+                        itemId: itemId,
                     }),
                 });
 
-                if (!itemResponse.ok) {
+                if (!transactionResponse.ok) {
                     setSubmissionStatus('error');
-                    toast.error('Gagal menyimpan data barang!');
+                    toast.error('Gagal menyimpan data transaksi!');
                     setIsSaving(false);
                     return;
                 }
-                const { item } = await itemResponse.json();
                 setSubmissionStatus('success');
-                toast.success('Berhasil menyimpan data barang!');
-
+                toast.success('Berhasil menyimpan data transaksi!');
+                const { transaction } = await transactionResponse.json();
                 // Clear localStorage and move to the next step
                 localStorage.clear();
-                localStorage.setItem('itemId', item.id);
+                localStorage.setItem('transactionId', transaction.id);
                 stepper.reset();
                 setIsSaving(false);
                 stepper.next();

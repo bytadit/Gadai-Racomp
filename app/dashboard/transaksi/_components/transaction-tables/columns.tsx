@@ -3,11 +3,12 @@
 import { ColumnDef } from '@tanstack/react-table';
 import { CellAction } from './cell-action';
 import { Item, Transaction } from '@prisma/client';
-import { formatDate, formatToIndonesianCurrency } from '@/lib/utils';
+import { cn, formatDate, formatToIndonesianCurrency } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
-import { ArrowUpDown } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { ArrowUpDown, Link } from 'lucide-react';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { getDeadlineInfo } from '@/lib/deadline';
 
 type TransactionWithItem = Transaction & {
     item: Item | null;
@@ -43,7 +44,7 @@ export const columns: ColumnDef<TransactionWithItem>[] = [
                 <Button
                     variant="ghost"
                     size={'sm'}
-                    className="p-2 w-full text-left justify-start"
+                    className="p-2 w-full text-left flex flex-row justify-between"
                     onClick={() =>
                         column.toggleSorting(column.getIsSorted() === 'asc')
                     }
@@ -69,7 +70,7 @@ export const columns: ColumnDef<TransactionWithItem>[] = [
                 <Button
                     variant="ghost"
                     size={'sm'}
-                    className="p-2 w-full text-left justify-start"
+                    className="p-2 w-full text-left flex flex-row justify-between"
                     onClick={() =>
                         column.toggleSorting(column.getIsSorted() === 'asc')
                     }
@@ -95,7 +96,7 @@ export const columns: ColumnDef<TransactionWithItem>[] = [
                 <Button
                     variant="ghost"
                     size={'sm'}
-                    className="p-2 w-full text-left justify-start"
+                    className="p-2 w-full text-left flex flex-row justify-between"
                     onClick={() =>
                         column.toggleSorting(column.getIsSorted() === 'asc')
                     }
@@ -121,7 +122,7 @@ export const columns: ColumnDef<TransactionWithItem>[] = [
                 <Button
                     variant="ghost"
                     size={'sm'}
-                    className="p-2 w-full text-left justify-start"
+                    className="p-2 w-full text-left flex flex-row justify-between"
                     onClick={() =>
                         column.toggleSorting(column.getIsSorted() === 'asc')
                     }
@@ -131,11 +132,21 @@ export const columns: ColumnDef<TransactionWithItem>[] = [
                 </Button>
             );
         },
-        cell: ({ cell }) => (
-            <div className="px-2 whitespace-nowrap overflow-hidden text-ellipsis">
-                {formatDate(cell.getValue() as string)}
-            </div>
-        ),
+        cell: ({ cell }) => {
+            const deadlineInfo = getDeadlineInfo(cell.getValue() as string);
+            return (
+                <div className="px-2 flex items-center whitespace-nowrap overflow-hidden">
+                    <span
+                        className={`mr-2 font-bold flex-shrink-0 ${deadlineInfo.textColor}`}
+                    >
+                        {deadlineInfo.statusText}
+                    </span>
+                    <span className="overflow-hidden text-ellipsis flex-shrink">
+                        {formatDate(cell.getValue() as string)}
+                    </span>
+                </div>
+            );
+        },
     },
     {
         accessorKey: 'tanggungan_akhir',
@@ -144,7 +155,7 @@ export const columns: ColumnDef<TransactionWithItem>[] = [
                 <Button
                     variant="ghost"
                     size={'sm'}
-                    className="p-2 w-full text-left justify-start"
+                    className="p-2 w-full text-left flex flex-row justify-between"
                     onClick={() =>
                         column.toggleSorting(column.getIsSorted() === 'asc')
                     }
@@ -197,7 +208,7 @@ export const columns: ColumnDef<TransactionWithItem>[] = [
                 <Button
                     variant="ghost"
                     size={'sm'}
-                    className="p-2 w-full text-left justify-start"
+                    className="p-2 w-full text-left flex flex-row justify-between"
                     onClick={() =>
                         column.toggleSorting(column.getIsSorted() === 'asc')
                     }
@@ -210,9 +221,15 @@ export const columns: ColumnDef<TransactionWithItem>[] = [
         cell: ({ row }) => {
             const item = row.original.item;
             return (
-                <div className="whitespace-nowrap overflow-hidden text-ellipsis px-2">
+                <a
+                    href={`/dashboard/barang/${item?.id}`}
+                    className={cn(
+                        'px-1 text-left',
+                        buttonVariants({ variant: 'ghost' }),
+                    )}
+                >
                     {item?.name || 'Unknown'}
-                </div>
+                </a>
             );
         },
     },
@@ -223,7 +240,7 @@ export const columns: ColumnDef<TransactionWithItem>[] = [
                 <Button
                     variant="ghost"
                     size={'sm'}
-                    className="p-2 w-full text-left justify-start"
+                    className="p-2 w-full text-left flex flex-row justify-between"
                     onClick={() =>
                         column.toggleSorting(column.getIsSorted() === 'asc')
                     }
@@ -246,7 +263,7 @@ export const columns: ColumnDef<TransactionWithItem>[] = [
                 <Button
                     variant="ghost"
                     size={'sm'}
-                    className="p-2 w-full text-left justify-start"
+                    className="p-2 w-full text-left flex flex-row justify-between"
                     onClick={() =>
                         column.toggleSorting(column.getIsSorted() === 'asc')
                     }
@@ -269,7 +286,7 @@ export const columns: ColumnDef<TransactionWithItem>[] = [
                 <Button
                     variant="ghost"
                     size={'sm'}
-                    className="p-2 w-full text-left justify-start"
+                    className="p-2 w-full text-left flex flex-row justify-between"
                     onClick={() =>
                         column.toggleSorting(column.getIsSorted() === 'asc')
                     }
@@ -292,7 +309,7 @@ export const columns: ColumnDef<TransactionWithItem>[] = [
                 <Button
                     variant="ghost"
                     size={'sm'}
-                    className="p-2 w-full text-left justify-start"
+                    className="p-2 w-full text-left flex flex-row justify-between"
                     onClick={() =>
                         column.toggleSorting(column.getIsSorted() === 'asc')
                     }
@@ -315,7 +332,7 @@ export const columns: ColumnDef<TransactionWithItem>[] = [
                 <Button
                     variant="ghost"
                     size={'sm'}
-                    className="p-2 w-full text-left justify-start"
+                    className="p-2 w-full text-left flex flex-row justify-between"
                     onClick={() =>
                         column.toggleSorting(column.getIsSorted() === 'asc')
                     }
@@ -338,7 +355,7 @@ export const columns: ColumnDef<TransactionWithItem>[] = [
                 <Button
                     variant="ghost"
                     size={'sm'}
-                    className="p-2 w-full text-left justify-start"
+                    className="p-2 w-full text-left flex flex-row justify-between"
                     onClick={() =>
                         column.toggleSorting(column.getIsSorted() === 'asc')
                     }
