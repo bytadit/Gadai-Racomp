@@ -38,6 +38,7 @@ type FileWithFileName = {
     fileName: string;
 };
 
+
 const MAX_FILE_SIZE = 2000000;
 const ACCEPTED_IMAGE_TYPES = [
     'image/jpeg',

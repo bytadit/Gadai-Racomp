@@ -2,17 +2,44 @@
 // import { Checkbox } from '@/components/ui/checkbox';
 import { ColumnDef } from '@tanstack/react-table';
 import { CellAction } from './cell-action';
-import { Item, Transaction } from '@prisma/client';
+import { Item, Transaction, CashFlow } from '@prisma/client';
 import { cn, formatDate, formatToIndonesianCurrency } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { ArrowUpDown, Link } from 'lucide-react';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { getDeadlineInfo } from '@/lib/deadline';
+import {
+    calculateSisaTanggungan,
+    calculateTanggunganAkhir,
+} from '@/lib/transaction-helper';
+import React from 'react';
 
 type TransactionWithItem = Transaction & {
     item: Item | null;
 };
+async function fetchCashflowData(
+    transactionId: number,
+): Promise<{ transactionId: number; amount: number }[]> {
+    try {
+        // Construct the URL with the transaction id as query parameter.
+        const url = `/api/cashflows?storedTransactionId=${transactionId}`;
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error('Failed to fetch cashflow data');
+        }
+        // Get the cashflows from the API
+        const cashflows = await response.json();
+        // Map the raw data into the desired format
+        return cashflows.map((cashflow: any) => ({
+            transactionId: cashflow.transactionId,
+            amount: Number(cashflow.amount),
+        }));
+    } catch (error) {
+        console.error('Error in fetchCashflowData:', error);
+        return [];
+    }
+}
 
 export const columns: ColumnDef<TransactionWithItem>[] = [
     {
@@ -165,11 +192,71 @@ export const columns: ColumnDef<TransactionWithItem>[] = [
                 </Button>
             );
         },
-        cell: ({ row }) => (
-            <div className="px-2 whitespace-nowrap overflow-hidden text-ellipsis">
-                {formatToIndonesianCurrency(row.getValue('tanggungan_akhir'))}
-            </div>
-        ),
+        cell: ({ row }) => {
+            const tanggunganAkhir = calculateTanggunganAkhir({
+                tanggungan_awal: row.getValue('tanggungan_awal'),
+                tgl_jatuh_tempo: row.getValue('tgl_jatuh_tempo'),
+                persen_tanggungan: row.getValue('persen_tanggungan'),
+                nilai_pinjaman: row.getValue('nilai_pinjaman'),
+            });
+            return (
+                <div className="px-2 whitespace-nowrap overflow-hidden text-ellipsis">
+                    {formatToIndonesianCurrency(tanggunganAkhir)}
+                </div>
+            );
+        },
+    },
+    {
+        accessorKey: 'sisa_tanggungan',
+        header: ({ column }) => {
+            return (
+                <Button
+                    variant="ghost"
+                    size={'sm'}
+                    className="p-2 w-full text-left flex flex-row justify-between"
+                    onClick={() =>
+                        column.toggleSorting(column.getIsSorted() === 'asc')
+                    }
+                >
+                    SISA TANGGUNGAN
+                    <ArrowUpDown className="ml-2 h-4 w-4" />
+                </Button>
+            );
+        },
+        cell: ({ row }) => {
+            const transactionId = row.original.id;
+            const [cashflowData, setCashflowData] = React.useState<
+                Array<{ transactionId: number; amount: number }>
+            >([]);
+
+            React.useEffect(() => {
+                // Fetch the cashflow data for this transaction and store it in state.
+                fetchCashflowData(transactionId)
+                    .then((data) => {
+                        setCashflowData(data);
+                    })
+                    .catch((error) => {
+                        console.error('Error fetching cashflow data:', error);
+                    });
+            }, [transactionId]);
+
+            // Now calculate sisaTanggungan using the state variable.
+            const sisaTanggungan = calculateSisaTanggungan({
+                transaction: {
+                    id: row.original.id,
+                    tanggungan_awal: row.getValue('tanggungan_awal'),
+                    tgl_jatuh_tempo: row.getValue('tgl_jatuh_tempo'),
+                    persen_tanggungan: row.getValue('persen_tanggungan'),
+                    nilai_pinjaman: row.getValue('nilai_pinjaman'),
+                },
+                cashflows: cashflowData, // Using the state variable which holds the fetched cashflows.
+            });
+            return (
+                <div className="px-2 whitespace-nowrap overflow-hidden text-ellipsis">
+                    {formatToIndonesianCurrency(sisaTanggungan)}
+                </div>
+            );
+        },
     },
     {
         accessorKey: 'type',

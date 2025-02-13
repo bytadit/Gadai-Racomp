@@ -5,10 +5,9 @@ export type DeadlineInfo = {
     rawDate: Date;
   }
   
-  export const getDeadlineInfo = (dateString: string): DeadlineInfo => {
+  export const getDeadlineInfo = (dateString: string, fromDate?: string): DeadlineInfo => {
     const deadlineDate = new Date(dateString);
-    const today = new Date();
-    
+    const today = fromDate ? new Date(fromDate) : new Date();
     // Normalize dates to midnight
     today.setHours(0, 0, 0, 0);
     const normalizedDeadline = new Date(deadlineDate);

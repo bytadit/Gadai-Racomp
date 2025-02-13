@@ -2,12 +2,14 @@ import React from 'react';
 import { Button } from '@/components/ui/button'; // Assuming you have a Button component
 import { Card } from '@/components/ui/card'; // Assuming you have a Card component for styling
 import { SpokeSpinner } from '@/components/ui/spinner';
+import { formatToIndonesianCurrency } from '@/lib/utils';
 // import { Badge } from '@/components/ui/badge';
 
 type ItemCardProps = {
     item: {
         id: number;
         name: string;
+        item_status: 'MASUK' | 'KELUAR' |'DIJUAL';
         type: 'KENDARAAN' | 'OTHER';
         brand: string;
         serial: string | null;
@@ -46,6 +48,15 @@ const ItemCard: React.FC<ItemCardProps> = ({
                     </div>
                     <div className="col-span-3">
                         <p>
+                            <strong>Status</strong>
+                        </p>
+                    </div>
+                    <div className="col-span-4">
+                        {': '}
+                        {item.item_status}
+                    </div>
+                    <div className="col-span-3">
+                        <p>
                             <strong>Merek</strong>
                         </p>
                     </div>
@@ -78,7 +89,7 @@ const ItemCard: React.FC<ItemCardProps> = ({
                     </div>
                     <div className="col-span-4">
                         {': '}
-                        {item.value}
+                        {formatToIndonesianCurrency(item.value)}
                     </div>
                     <div className="col-span-3">
                         <p>

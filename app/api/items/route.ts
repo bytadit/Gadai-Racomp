@@ -5,10 +5,8 @@ import { prisma } from '@/lib/prisma';
 export async function GET(req: Request) {
     try {
         const { searchParams } = new URL(req.url);
-        const storedCustomerId = searchParams.get('storedCustomerId');
-        const customerId = storedCustomerId
-            ? parseInt(storedCustomerId, 10)
-            : null;
+        const storedCustomerId = searchParams.get("storedCustomerId");
+        const customerId = storedCustomerId ? parseInt(storedCustomerId, 10) : null;
 
         const whereClause = customerId ? { customerId } : {};
 
@@ -22,10 +20,10 @@ export async function GET(req: Request) {
 
         return NextResponse.json(items);
     } catch (error) {
-        console.error('Error:', error);
+        console.error("Error fetching items:", error);
         return NextResponse.json(
-            { error: 'Failed to fetch items, please try again later' },
-            { status: 500 },
+            { error: "Failed to fetch items, please try again later" },
+            { status: 500 }
         );
     }
 }
@@ -52,6 +50,7 @@ export async function POST(req: Request) {
             data: {
                 name,
                 type,
+                item_status: 'MASUK',
                 desc,
                 year,
                 value,

@@ -8,13 +8,13 @@ import * as z from 'zod';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { useRouter } from 'next/navigation'; // For navigation
 import { toast } from 'sonner';
-// import {
-//     Select,
-//     SelectContent,
-//     SelectItem,
-//     SelectTrigger,
-//     SelectValue,
-// } from '@/components/ui/select';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import {
     Form,
     FormControl,
@@ -39,6 +39,7 @@ type Item = {
     id: number;
     name: string;
     type: 'KENDARAAN' | 'OTHER';
+    item_status: 'MASUK' | 'KELUAR' | 'DIJUAL';
     desc?: string;
     year: number;
     value: any;
@@ -84,6 +85,9 @@ export default function EditItemForm({
                 }),
             type: z.enum(['KENDARAAN', 'OTHER'], {
                 required_error: 'Pilih tipe barang!',
+            }),
+            item_status: z.enum(['MASUK', 'KELUAR', 'DIJUAL'], {
+                required_error: 'Pilih status barang!',
             }),
             desc: z.string().optional(),
             year: z.preprocess(
@@ -208,6 +212,7 @@ export default function EditItemForm({
         defaultValues: {
             name: '',
             type: 'KENDARAAN',
+            item_status: 'MASUK',
             desc: '',
             year: new Date().getFullYear(),
             serial: '',
@@ -253,6 +258,7 @@ export default function EditItemForm({
                         form.setValue('name', data.name);
                         form.setValue('type', data.type);
                         form.setValue('serial', data.serial);
+                        form.setValue('item_status', data.item_status);
                         form.setValue('desc', data.desc || '');
                         form.setValue('year', data.year);
                         form.setValue('brand', data.brand);
@@ -701,34 +707,70 @@ export default function EditItemForm({
                                     )}
                                 />
                             </div>
-                            <FormField
-                                control={form.control}
-                                name="year"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Tahun Barang</FormLabel>
-                                        <FormControl>
-                                            <Input
-                                                type="number"
-                                                placeholder="Tahun Barang"
-                                                {...field}
-                                                value={field.value || ''}
-                                                onChange={(e) => {
-                                                    const newValue = e.target
-                                                        .value
-                                                        ? parseInt(
-                                                              e.target.value,
-                                                              10,
-                                                          )
-                                                        : '';
-                                                    field.onChange(newValue); // Ensure it's treated as a number
-                                                }}
-                                            />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
+                            <div className="grid grid-cols-2 gap-6">
+                                <FormField
+                                    control={form.control}
+                                    name="year"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Tahun Barang</FormLabel>
+                                            <FormControl>
+                                                <Input
+                                                    type="number"
+                                                    placeholder="Tahun Barang"
+                                                    {...field}
+                                                    value={field.value || ''}
+                                                    onChange={(e) => {
+                                                        const newValue = e
+                                                            .target.value
+                                                            ? parseInt(
+                                                                  e.target
+                                                                      .value,
+                                                                  10,
+                                                              )
+                                                            : '';
+                                                        field.onChange(
+                                                            newValue,
+                                                        ); // Ensure it's treated as a number
+                                                    }}
+                                                />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                <FormField
+                                    control={form.control}
+                                    name="item_status"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Status Barang</FormLabel>
+                                            <Select
+                                                onValueChange={field.onChange}
+                                                value={field.value}
+                                            >
+                                                <FormControl>
+                                                    <SelectTrigger>
+                                                        <SelectValue placeholder="Pilih status barang" />
+                                                    </SelectTrigger>
+                                                </FormControl>
+                                                <SelectContent>
+                                                    <SelectItem value="MASUK">
+                                                        Masuk
+                                                    </SelectItem>
+                                                    <SelectItem value="KELUAR">
+                                                        Keluar
+                                                    </SelectItem>
+                                                    <SelectItem value="DIJUAL">
+                                                        Dijual
+                                                    </SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                            </div>
 
                             <FormField
                                 control={form.control}

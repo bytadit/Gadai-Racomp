@@ -55,35 +55,41 @@ const ItemStep = () => {
         currentPage * ITEMS_PER_PAGE,
     );
     const storedCustomerId = localStorage.getItem('customerId');
+
     const fetchItems = async () => {
         setIsLoading(true);
         try {
-            let response;
-            if (storedCustomerId !== null) {
-                // Pass storedCustomerId as a query parameter
-                response = await fetch(
-                    `/api/items?storedCustomerId=${storedCustomerId}`,
-                );
-            } else {
-                response = await fetch('/api/items');
+            // If there is no stored customer id, do not perform a fetch
+            if (storedCustomerId === null) {
+                // Set state to reflect that no items are available.
+                setBarangs([]);
+                setFilteredItems([]);
+                setSelectedItemId(null);
+                return; // Exit early
             }
+
+            // If there is a stored customer id, pass it as a query parameter.
+            const response = await fetch(
+                `/api/items?storedCustomerId=${storedCustomerId}`,
+            );
             if (!response.ok) {
                 throw new Error('Failed to fetch items');
             }
             const data = await response.json();
             setBarangs(data);
-            // Check localStorage for existing selected item
+
+            // Check localStorage for an existing selected item
             const storedItem = localStorage.getItem('selectedItem');
             const storedItemId = localStorage.getItem('itemId');
 
-            // Filter out selected item if exists
+            // Filter out the selected item if it exists
             setFilteredItems(
                 storedItemId
                     ? data.filter((c: Item) => c.id.toString() !== storedItemId)
                     : data,
             );
 
-            // If stored item exists, set it in state
+            // If a stored item exists, set it in state
             if (storedItem) {
                 setSelectedItemId(JSON.parse(storedItem).id);
             }
@@ -154,7 +160,13 @@ const ItemStep = () => {
     };
     const handleAddItem = () => {
         setIsAddingItem(true);
-        reset({
+
+        // Retrieve the existing form data from localStorage.
+        const storedData = localStorage.getItem('formData');
+        const currentValues = storedData ? JSON.parse(storedData) : {};
+
+        // Create new item defaults.
+        const newItemDefaults = {
             itemName: '',
             itemType: 'KENDARAAN',
             itemYear: new Date().getFullYear(),
@@ -162,14 +174,33 @@ const ItemStep = () => {
             itemBrand: '',
             itemSerial: '',
             itemDesc: '',
-        });
+        };
+
+        // Merge the new item defaults into the existing data.
+        const updatedValues = {
+            ...currentValues,
+            ...newItemDefaults,
+        };
+
+        // Reset the form with the merged values.
+        reset(updatedValues);
+
+        // Update localStorage with the merged data.
+        localStorage.setItem('formData', JSON.stringify(updatedValues));
+
         setSelectedItemId(null);
         localStorage.removeItem('itemId');
         localStorage.removeItem('selectedItem');
     };
     const handleCancelAddItem = () => {
         setIsAddingItem(false);
-        reset({
+
+        // Retrieve the existing form data from localStorage.
+        const storedData = localStorage.getItem('formData');
+        const currentValues = storedData ? JSON.parse(storedData) : {};
+
+        // Create new item defaults.
+        const newItemDefaults = {
             itemName: '',
             itemType: 'KENDARAAN',
             itemYear: new Date().getFullYear(),
@@ -177,7 +208,20 @@ const ItemStep = () => {
             itemBrand: '',
             itemSerial: '',
             itemDesc: '',
-        });
+        };
+
+        // Merge the new item defaults into the existing data.
+        const updatedValues = {
+            ...currentValues,
+            ...newItemDefaults,
+        };
+
+        // Reset the form with the merged values.
+        reset(updatedValues);
+
+        // Update the stored form data so non-item data remains intact.
+        localStorage.setItem('formData', JSON.stringify(updatedValues));
+
         setSearchQuery('');
         localStorage.setItem('itemId', '');
     };

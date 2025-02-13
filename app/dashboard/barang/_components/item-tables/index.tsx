@@ -12,7 +12,11 @@ import { columns } from '../item-tables/columns';
 import { Download } from 'lucide-react';
 import { exportTableToCSV } from '@/lib/export';
 import { Button } from '@/components/ui/button';
-import { TYPE_OPTIONS, useItemTableFilters } from './use-item-table-filters';
+import {
+    TYPE_OPTIONS,
+    ITEM_STATUS_OPTIONS,
+    useItemTableFilters,
+} from './use-item-table-filters';
 import { SelectionPopup } from '@/components/selection-popup';
 type ItemWithCustomer = Item & {
     customer: Customer | null; // Related customer can be null if not present
@@ -33,6 +37,8 @@ export default function ItemTable({
         isAnyFilterActive,
         typeFilter,
         setTypeFilter,
+        item_statusFilter,
+        setItem_statusFilter,
         yearOptions,
         selectedYear,
         setSelectedYear,
@@ -42,7 +48,7 @@ export default function ItemTable({
     } = useItemTableFilters();
     useEffect(() => {
         setSelectedYear(null);
-    }, [typeFilter, setSelectedYear]);
+    }, [typeFilter, item_statusFilter, setSelectedYear]);
     const [rowSelection, setRowSelection] = useState({});
 
     const table = useReactTable({
@@ -89,18 +95,25 @@ export default function ItemTable({
                     <Download className="size-4" aria-hidden="true" />
                 </Button>
             </div>
-            <div className="flex items-center flex-wrap justify-start gap-4">
+            <div className="flex items-center flex-wrap justify-start gap-2">
                 <DataTableResetFilter
                     isFilterActive={isAnyFilterActive}
                     onReset={resetFilters}
-                    classname="order-1"
+                    classname="order-1 text-xs"
                 />
                 <DataTableFilterBox
                     filterKey="type"
-                    title="Item Type"
+                    title="Tipe"
                     options={TYPE_OPTIONS}
                     setFilterValue={setTypeFilter}
                     filterValue={typeFilter}
+                />
+                <DataTableFilterBox
+                    filterKey="item_status"
+                    title="Status"
+                    options={ITEM_STATUS_OPTIONS}
+                    setFilterValue={setItem_statusFilter}
+                    filterValue={item_statusFilter}
                 />
                 {/* Year Filter */}
                 {yearOptions.length > 0 && (

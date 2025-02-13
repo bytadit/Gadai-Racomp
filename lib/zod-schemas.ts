@@ -219,7 +219,7 @@ export const transactionSchema = z.object({
     //     // check termin terakhir (sisa tanggungan 0/lunas/dijual/selesai)
     //     required_error: 'Masukkan waktu pengembalian!',
     // }),
-    // transStatusTransaksi: z.enum(['BERJALAN', 'SELESAI', 'TERLAMBAT'], {
+    // transStatusTransaksi: z.enum(['BERJALAN', 'SELESAI', 'PERPANJANG'], {
     //     // default berjalan; cicilan selesai/dijual maka selesai; melebihi tempo mk terlambat
     //     required_error: 'Pilih status transaksi!',
     // }),

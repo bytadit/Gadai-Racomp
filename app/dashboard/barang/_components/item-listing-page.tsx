@@ -19,6 +19,7 @@ export default async function ItemListingPage() {
     const page = searchParamsCache.get('page');
     const search = searchParamsCache.get('q');
     const type = searchParamsCache.get('type');
+    const item_status = searchParamsCache.get('item_status');
     const year = searchParamsCache.get('year');
     const brand = searchParamsCache.get('brand');
 
@@ -30,6 +31,7 @@ export default async function ItemListingPage() {
         ...(search && { search }),
         ...(year && { years: year }),
         ...(type && { types: type }),
+        ...(item_status && { itemStatus: item_status }),
         ...(brand && { brands: brand }),
     };
 

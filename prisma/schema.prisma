@@ -35,6 +35,12 @@ enum ItemType {
   OTHER
 }
 
+enum ItemStatus {
+  MASUK
+  KELUAR
+  DIJUAL
+}
+
 enum TransactionType {
   SIMPAN
   PAKAI
@@ -43,7 +49,7 @@ enum TransactionType {
 enum TransactionStatus {
   BERJALAN
   SELESAI
-  TERLAMBAT
+  PERPANJANG
 }
 
 enum CicilanStatus {
@@ -107,6 +113,7 @@ model Item {
   id Int @id @default(autoincrement())
   name String
   type ItemType @default(KENDARAAN)
+  item_status ItemStatus @default(MASUK)
   desc String? @db.Text
   year Int? @db.SmallInt
   value Decimal? @db.Money
@@ -143,12 +150,10 @@ model Transaction {
 model CashFlow {
   id Int @id @default(autoincrement())
   termin Int
-  desc String? @db.Text
-  amount Decimal @db.Money
-  tanggungan Decimal @db.Money
-  waktu_bayar DateTime
   payment_type PaymentType
-  kwitansi_url String? // generate kwitansi
+  amount Decimal @db.Money
+  waktu_bayar DateTime
+  desc String? @db.Text
   transaction Transaction? @relation(fields: [transactionId], references: [id], onDelete: SetNull)
   transactionId Int?
   createdAt DateTime @default(now())

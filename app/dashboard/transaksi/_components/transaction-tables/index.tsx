@@ -75,11 +75,11 @@ export default function TransactionTable({
                 </Button>
             </div>
 
-            <div className="flex items-center flex-wrap justify-start gap-4">
+            <div className="flex items-center flex-wrap justify-start gap-2">
                 <DataTableResetFilter
                     isFilterActive={isAnyFilterActive}
                     onReset={resetFilters}
-                    classname="order-1"
+                    classname="order-1 text-xs"
                 />
                 <DataTableFilterBox
                     filterKey="type"

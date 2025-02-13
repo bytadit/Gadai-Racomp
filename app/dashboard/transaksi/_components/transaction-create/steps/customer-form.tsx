@@ -3,10 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { Input } from '@/components/ui/input';
-import {
-    CustomerFormValues,
-    customerSchema,
-} from '@/lib/zod-schemas';
+import { CustomerFormValues, customerSchema } from '@/lib/zod-schemas';
 import DatePicker from '@/components/date-picker';
 import { Label } from '@/components/ui/label';
 import { usePhoneNumbers } from '@/hooks/use-phone-numbers';
@@ -143,6 +140,9 @@ const CustomerStep = () => {
     };
     const handleCardSelect = (newSelectedCustomerId: string) => {
         setIsSelecting(newSelectedCustomerId);
+        localStorage.removeItem('selectedItem');
+        setSearchQuery('');
+        localStorage.setItem('itemId', '');
         setTimeout(() => {
             const storedCustomerId = localStorage.getItem('customerId');
             setSelectedCustomerId(newSelectedCustomerId);
@@ -169,6 +169,9 @@ const CustomerStep = () => {
         }, 1500);
     };
     const handleAddCustomer = () => {
+        localStorage.removeItem('selectedItem');
+        setSearchQuery('');
+        localStorage.setItem('itemId', '');
         setIsAddingCustomer(true);
         reset({
             customerName: '',

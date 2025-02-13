@@ -34,6 +34,7 @@ type Item = {
     id: number;
     name: string;
     type: 'KENDARAAN' | 'OTHER';
+    item_status: 'MASUK' | 'KELUAR' | 'DIJUAL';
     desc?: string;
     year: number;
     value: any;
@@ -170,6 +171,14 @@ export default function ItemDetailPage({
                                 Tipe
                             </div>
                             <div className="py-2 col-span-2">: {item.type}</div>
+                        </div>
+                        <div className="grid grid-cols-3">
+                            <div className="py-2 font-semibold col-span-1">
+                                Status
+                            </div>
+                            <div className="py-2 col-span-2">
+                                : {item.item_status}
+                            </div>
                         </div>
                         <div className="grid grid-cols-3">
                             <div className="py-2 font-semibold col-span-1">

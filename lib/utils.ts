@@ -48,7 +48,9 @@ export function formatBytes(
     }`;
 }
 
-export const formatDate = (dateStr: string) => {
+export const formatDate = (dateStr: string | undefined) => {
+    if (!dateStr) return '-'; // or return any default value you want
+
     const date = new Date(dateStr);
     const formatter = new Intl.DateTimeFormat('id-ID', {
         dateStyle: 'medium',
@@ -71,9 +73,20 @@ export const formatToIndonesianCurrency = (value: number): string => {
     return new Intl.NumberFormat('id-ID', {
         style: 'currency',
         currency: 'IDR',
-        minimumFractionDigits: 2,
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
     }).format(value);
 };
+
+// export const formatToIndonesianCurrency = (value: number): string => {
+//     const formatted = new Intl.NumberFormat('id-ID', {
+//         style: 'currency',
+//         currency: 'IDR',
+//         minimumFractionDigits: 2,
+//     }).format(value);
+
+//     return formatted.replace(',00', ',-');
+// };
 
 export const simplifyIndonesianValue = (value: number): string => {
     if (value >= 1_000_000_000) {
@@ -112,4 +125,4 @@ export const parseCurrency = (value: string | number): number => {
     const stringValue = typeof value === 'number' ? value.toString() : value;
     const digitsOnly = stringValue.replace(/[^0-9]/g, '');
     return Number(digitsOnly) || 0;
-  };
+};

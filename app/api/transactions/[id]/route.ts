@@ -12,7 +12,7 @@ export async function GET(
             include: {
                 cashflows: true,
                 transactionDocuments: true,
-                item: true
+                item: true,
             },
         });
         if (!transaction) {
@@ -36,68 +36,53 @@ export async function PUT(
 ) {
     try {
         const transactionId = parseInt(params.id, 10);
-        const {
-            desc,
-            type,
-            nilai_pinjaman,
-            persen_tanggungan,
-            waktu_pinjam,
-            tgl_jatuh_tempo,
-            tanggungan_awal,
-            tanggungan_akhir,
-            waktu_kembali,
-            status_transaksi,
-            status_cicilan,
-        } = await req.json();
+        const updateData = await req.json();
 
-        if (
-            !desc ||
-            !type ||
-            !nilai_pinjaman ||
-            !persen_tanggungan ||
-            !waktu_pinjam ||
-            !tgl_jatuh_tempo ||
-            !tanggungan_awal ||
-            !tanggungan_akhir ||
-            !waktu_kembali ||
-            !status_transaksi ||
-            !status_cicilan        ) {
-            return NextResponse.json(
-                { message: 'Missing required fields' },
-                { status: 400 },
-            );
+        // Define allowed fields that match the schema
+        const allowedFields = [
+            'type',
+            'nilai_pinjaman',
+            'persen_tanggungan',
+            'waktu_pinjam',
+            'tgl_jatuh_tempo',
+            'tanggungan_awal',
+            'tanggungan_akhir',
+            'waktu_kembali',
+            'status_transaksi',
+            'status_cicilan',
+            'desc',
+            'itemId',
+        ];
+
+        // Filter only allowed fields from the update data
+        const cleanedData: Record<string, any> = {};
+
+        for (const [key, value] of Object.entries(updateData)) {
+            if (allowedFields.includes(key) && value !== undefined) {
+                cleanedData[key] = value;
+            }
         }
 
-        // Update the document in the database
+        // Add updatedAt timestamp
+        cleanedData.updatedAt = new Date();
+
+        // Update the document in the database with only allowed fields
         const updatedTransaction = await prisma.transaction.update({
             where: { id: transactionId },
-            data: {
-                desc,
-                type,
-                nilai_pinjaman,
-                persen_tanggungan,
-                waktu_pinjam,
-                tgl_jatuh_tempo,
-                tanggungan_awal,
-                tanggungan_akhir,
-                waktu_kembali,
-                status_transaksi,
-                status_cicilan,
-                updatedAt: new Date(),
-            },
+            data: cleanedData,
         });
 
         return NextResponse.json(
             {
-                message: 'Trsansaction updated successfully',
+                message: 'Transaction updated successfully',
                 transaction: updatedTransaction,
             },
             { status: 200 },
         );
     } catch (error: any) {
-        console.error('Error updating trsansaction:', error);
+        console.error('Error updating transaction:', error);
         return NextResponse.json(
-            { message: 'Failed to update trsansaction', error: error.message },
+            { message: 'Failed to update transaction', error: error.message },
             { status: 500 },
         );
     }

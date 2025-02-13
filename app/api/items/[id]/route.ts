@@ -36,10 +36,10 @@ export async function PUT(
 ) {
     try {
         const itemId = parseInt(params.id, 10);
-        const { name, type, desc, year, value, brand, serial } =
+        const { name, type, desc, year, value, brand, serial, item_status } =
             await req.json();
 
-        if (!name || !type || !desc || !year || !value || !brand || !serial) {
+        if (!name || !type || !desc || !year || !value || !brand || !serial || !item_status) {
             return NextResponse.json(
                 { message: 'Missing required fields' },
                 { status: 400 },
@@ -52,6 +52,7 @@ export async function PUT(
             data: {
                 name,
                 type,
+                item_status,
                 desc,
                 year,
                 value,

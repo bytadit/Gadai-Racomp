@@ -79,6 +79,7 @@ export const getCustomers = {
 export const getItems = {
     // filter by
     // - type V
+    // - item status v
     // - brand V
     // - year V
     // - value range
@@ -86,10 +87,12 @@ export const getItems = {
         types = [],
         brands = [],
         years = [],
+        itemStatus = [],
         search,
     }: {
         types?: string[];
         brands?: string[];
+        itemStatus? : string[];
         years?: string[];
         search?: string;
     }) {
@@ -104,6 +107,9 @@ export const getItems = {
         // Filter items based on selected types
         if (types.length > 0) {
             items = items.filter((item) => types.includes(item.type));
+        }
+        if (itemStatus.length > 0) {
+            items = items.filter((item) => itemStatus.includes(item.item_status));
         }
         if (years.length > 0) {
             items = items.filter((item) =>
@@ -126,6 +132,7 @@ export const getItems = {
         page = 1,
         limit = 10,
         types,
+        itemStatus,
         brands,
         years,
         search,
@@ -133,16 +140,19 @@ export const getItems = {
         page?: number;
         limit?: number;
         types?: string;
+        itemStatus?: string;
         years?: string;
         brands?: string;
         search?: string;
     }) {
         const typesArray = types ? types.split('.') : [];
+        const itemStatusArray = itemStatus ? itemStatus.split('.') : [];
         const brandsArray = brands ? brands.split('.') : [];
         const yearsArray = years ? years.split('.') : [];
 
         const allItems = await this.getAll({
             types: typesArray,
+            itemStatus: itemStatusArray,
             brands: brandsArray,
             years: yearsArray,
             search,
@@ -262,6 +272,78 @@ export const getTransactions = {
             offset,
             limit,
             transactions: paginatedTransactions,
+        };
+    },
+};
+
+export const getCashflows = {
+    // filter by
+    // - payment type
+    // transaction
+
+    async getAll({
+        paymentTypes = [],
+        search,
+    }: {
+        paymentTypes?: string[];
+        search?: string;
+    }) {
+        let cashflows = await prisma.cashFlow.findMany({
+            include: {
+                transaction: true,
+            },
+            orderBy: {
+                updatedAt: 'desc',
+            },
+        });
+        // Filter items based on selected types
+        if (paymentTypes.length > 0) {
+            cashflows = cashflows.filter((cashflow) =>
+                paymentTypes.includes(cashflow.payment_type),
+            );
+        }else if (search) {
+            cashflows = matchSorter(cashflows, search, {
+                keys: ['customer', 'item', 'transaction'],
+            });
+        }
+        return cashflows;
+    },
+    // Get paginated results with optional gender filtering and search
+    async getPaginated({
+        page = 1,
+        limit = 10,
+        paymentTypes,
+        search,
+    }: {
+        page?: number;
+        limit?: number;
+        paymentTypes?: string;
+        search?: string;
+    }) {
+        const paymentTypesArray = paymentTypes ? paymentTypes.split('.') : [];
+        
+        const allCashflows = await this.getAll({
+            paymentTypes: paymentTypesArray,
+            search,
+        });
+        const totalCashflows = allCashflows.length;
+        // Pagination logic
+        const offset = (page - 1) * limit;
+        const paginatedCashflows = allCashflows.slice(
+            offset,
+            offset + limit,
+        );
+        // Mock current time
+        const currentTime = new Date().toISOString();
+        // Return paginated response
+        return {
+            success: true,
+            time: currentTime,
+            message: 'Cashflows Data',
+            total_cashflows: totalCashflows,
+            offset,
+            limit,
+            cashflows: paginatedCashflows,
         };
     },
 };

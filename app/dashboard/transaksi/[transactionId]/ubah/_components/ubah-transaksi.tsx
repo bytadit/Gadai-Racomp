@@ -36,6 +36,10 @@ import { formatCurrency, parseCurrency } from '@/lib/utils';
 import { DocumentEditor } from '@/components/document-editor';
 import { Toggle } from '@/components/ui/toggle';
 import { DateTimePicker } from '@/components/date-time-picker';
+import {
+    calculateStatusCicilan,
+    calculateStatusTransaksi,
+} from '@/lib/transaction-helper';
 
 type Transaction = {
     id: number;
@@ -48,8 +52,22 @@ type Transaction = {
     tanggungan_awal: any;
     tanggungan_akhir: any;
     waktu_kembali: string;
-    status_transaksi: 'BERJALAN' | 'SELESAI' | 'TERLAMBAT';
+    cashflows: CashFlow[];
+    status_transaksi: 'BERJALAN' | 'SELESAI' | 'PERPANJANG';
     status_cicilan: 'AMAN' | 'BERMASALAH' | 'DIJUAL';
+};
+
+type CashFlow = {
+    id: number;
+    termin: number;
+    desc?: string;
+    amount: any;
+    tanggungan: any;
+    waktu_bayar: string;
+    payment_type: 'CASH' | 'BNI' | 'BSI';
+    kwitansi_url?: string;
+    transaction: Transaction;
+    transactionId: number;
 };
 
 type DocumentType = 'FOTO' | 'DOKUMEN';
@@ -146,7 +164,7 @@ export default function EditTransactionForm({
                 required_error: 'Masukkan waktu pengembalian barang!',
             }),
         ),
-        status_transaksi: z.enum(['BERJALAN', 'SELESAI', 'TERLAMBAT'], {
+        status_transaksi: z.enum(['BERJALAN', 'SELESAI', 'PERPANJANG'], {
             required_error: 'Pilih status transaksi!',
         }),
         status_cicilan: z.enum(['AMAN', 'BERMASALAH', 'DIJUAL'], {
@@ -260,6 +278,15 @@ export default function EditTransactionForm({
                     if (response.ok) {
                         const data = await response.json();
                         setTransaction(data);
+                        const statusTransaksi = calculateStatusTransaksi({
+                            status_transaksi: data.status_transaksi,
+                            tgl_jatuh_tempo: data.tgl_jatuh_tempo,
+                        }) as 'BERJALAN' | 'SELESAI' | 'PERPANJANG';
+                        const statusCicilan = calculateStatusCicilan({
+                            status_cicilan: data.status_cicilan,
+                            tgl_jatuh_tempo: data.tgl_jatuh_tempo,
+                            cashflows: data.cashflows, // replace [] with actual cashflow data if available
+                        }) as 'AMAN' | 'BERMASALAH' | 'DIJUAL';
                         form.setValue('nilai_pinjaman', data.nilai_pinjaman);
                         form.setValue(
                             'persen_tanggungan',
@@ -277,7 +304,8 @@ export default function EditTransactionForm({
                         form.setValue('duration', durationMonths);
                         form.setValue('tgl_jatuh_tempo', data.tgl_jatuh_tempo);
                         form.setValue('tanggungan_awal', data.tanggungan_awal);
-                        form.setValue('desc', data.desc);
+                        form.setValue('status_transaksi', statusTransaksi);
+                        form.setValue('status_cicilan', statusCicilan);
                         const initialDocuments = data.transactionDocuments.map(
                             (doc: any) => ({
                                 id: doc.id,
@@ -346,6 +374,20 @@ export default function EditTransactionForm({
             form.setValue('tgl_jatuh_tempo', startDate);
         }
     }, [duration, waktu_pinjam, isOverrideJatuhTempo, form]);
+
+    React.useEffect(() => {
+        const statusTransaksi = calculateStatusTransaksi({
+            status_transaksi: transaction?.status_transaksi,
+            tgl_jatuh_tempo: tgl_jatuh_tempo,
+        }) as 'BERJALAN' | 'SELESAI' | 'PERPANJANG';
+        const statusCicilan = calculateStatusCicilan({
+            status_cicilan: transaction?.status_cicilan,
+            tgl_jatuh_tempo: tgl_jatuh_tempo,
+            cashflows: transaction?.cashflows ?? [],
+        }) as 'AMAN' | 'BERMASALAH' | 'DIJUAL';
+        form.setValue('status_transaksi', statusTransaksi);
+        form.setValue('status_cicilan', statusCicilan);
+    }, [tgl_jatuh_tempo, transaction, form]);
     // --- New local state for toggles
     // When true, the user manually overrides tanggungan_akhir.
     const [isOverrideTanggunganAkhir, setIsOverrideTanggunganAkhir] =
@@ -1039,6 +1081,7 @@ export default function EditTransactionForm({
                                         <Select
                                             onValueChange={field.onChange}
                                             value={field.value}
+                                            disabled={true}
                                         >
                                             <FormControl>
                                                 <SelectTrigger>
@@ -1052,8 +1095,8 @@ export default function EditTransactionForm({
                                                 <SelectItem value="SELESAI">
                                                     Selesai
                                                 </SelectItem>
-                                                <SelectItem value="TERLAMBAT">
-                                                    Terlambat
+                                                <SelectItem value="PERPANJANG">
+                                                    Perpanjang
                                                 </SelectItem>
                                             </SelectContent>
                                         </Select>
@@ -1072,6 +1115,7 @@ export default function EditTransactionForm({
                                         <Select
                                             onValueChange={field.onChange}
                                             value={field.value}
+                                            disabled={true}
                                         >
                                             <FormControl>
                                                 <SelectTrigger>

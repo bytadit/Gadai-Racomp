@@ -4,6 +4,7 @@ import { Button, buttonVariants } from '@/components/ui/button';
 // import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import Link from 'next/link';
 import { CircleCheck, Info, List, OctagonX, Plus } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 // Define the props for CompleteStep
 type CompleteStepProps = {
@@ -13,12 +14,27 @@ type CompleteStepProps = {
 
 const CompleteStep = ({ handleReset, status }: CompleteStepProps) => {
     const [itemId, setItemId] = useState<string | null>(null);
+    const [countdown, setCountdown] = useState(5);
+    const router = useRouter();
+
     useEffect(() => {
         const storedItemId = localStorage.getItem('itemId');
         if (storedItemId) {
             setItemId(storedItemId);
         }
     }, []);
+    // Countdown effect with redirect
+    useEffect(() => {
+        if (countdown > 0) {
+            const timer = setTimeout(() => {
+                setCountdown(countdown - 1);
+            }, 1000);
+            return () => clearTimeout(timer);
+        } else if (countdown === 0 && itemId) {
+            router.push(`/dashboard/barang/${itemId}`);
+            handleReset();
+        }
+    }, [countdown, handleReset, router, itemId]);
     if (status === 'error') {
         return (
             <div className="flex flex-col items-center justify-center space-y-6 p-8">
@@ -56,6 +72,9 @@ const CompleteStep = ({ handleReset, status }: CompleteStepProps) => {
             <p className="text-center text-lg">
                 Data Barang berhasil disimpan!
             </p>
+            <p className="text-center text-sm text-muted-foreground">
+                Dialihkan ke halaman detail dalam {countdown} detik...
+            </p>
             <CircleCheck size={200} color="green" />
             <div className="justify-center text-center items-center flex flex-col sm:flex-row gap-4 mt-6">
                 <Button
@@ -70,6 +89,9 @@ const CompleteStep = ({ handleReset, status }: CompleteStepProps) => {
                 <Link
                     className={buttonVariants({ variant: 'outline' })}
                     href={'/dashboard/barang'}
+                    onClick={() => {
+                        handleReset();
+                    }}
                 >
                     <span className="flex flex-row items-center gap-2">
                         {'Daftar Barang '}
@@ -79,6 +101,9 @@ const CompleteStep = ({ handleReset, status }: CompleteStepProps) => {
                 <Link
                     className={buttonVariants({ variant: 'outline' })}
                     href={`/dashboard/barang/${itemId}`}
+                    onClick={() => {
+                        handleReset();
+                    }}
                 >
                     <span className="flex flex-row items-center gap-2">
                         {'Detail Barang '}

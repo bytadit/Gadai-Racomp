@@ -25,10 +25,12 @@ const badgeVariants = cva(
                     'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
                 SELESAI:
                     'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
-                TERLAMBAT:
+                PERPANJANG:
                     'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
                 BERMASALAH:
                     'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
+                KELUAR: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
+                MASUK: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
                 DIJUAL: 'bg-gray-100 text-gray-800 dark:bg-gray-500 dark:text-gray-300',
             },
         },

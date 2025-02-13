@@ -8,6 +8,11 @@ export const TYPE_OPTIONS = [
     { value: 'KENDARAAN', label: 'Kendaraan' },
     { value: 'OTHER', label: 'Other' },
 ];
+export const ITEM_STATUS_OPTIONS = [
+    { value: 'MASUK', label: 'Masuk' },
+    { value: 'KELUAR', label: 'Keluar' },
+    { value: 'DIJUAL', label: 'Dijual' },
+];
 
 
 export function useItemTableFilters() {
@@ -39,6 +44,10 @@ export function useItemTableFilters() {
         'type',
         searchParams.type.withOptions({ shallow: false }).withDefault(''),
     );
+    const [item_statusFilter, setItem_statusFilter] = useQueryState(
+        'item_status',
+        searchParams.item_status.withOptions({ shallow: false }).withDefault(''),
+    );
 
     const [page, setPage] = useQueryState(
         'page',
@@ -56,6 +65,7 @@ export function useItemTableFilters() {
                     columnName: 'year',
                     filters: {
                         type: typeFilter,
+                        item_status: item_statusFilter
                         // Add other active filters here
                     },
                 }),
@@ -81,7 +91,7 @@ export function useItemTableFilters() {
             console.error('Failed to fetch years:', error);
             setYearOptions([]);
         }
-    }, [typeFilter]); // Add other filter dependencies here
+    }, [typeFilter, item_statusFilter]); // Add other filter dependencies here
 
     useEffect(() => {
         fetchYears();
@@ -99,6 +109,7 @@ export function useItemTableFilters() {
                     columnName: 'brand',
                     filters: {
                         type: typeFilter,
+                        item_status: item_statusFilter,
                         year: selectedYear,
                         // Add other active filters here
                     },
@@ -125,7 +136,7 @@ export function useItemTableFilters() {
             console.error('Failed to fetch brands:', error);
             setBrandOptions([]);
         }
-    }, [typeFilter, selectedYear]); // Add other filter dependencies here
+    }, [typeFilter, item_statusFilter, selectedYear]); // Add other filter dependencies here
 
     useEffect(() => {
         fetchBrands();
@@ -134,17 +145,19 @@ export function useItemTableFilters() {
     // Add effect to reset brand filter when other filters change
     useEffect(() => {
         setSelectedBrand(null);
-    }, [typeFilter, selectedYear, setSelectedBrand]);
+    }, [typeFilter, item_statusFilter, selectedYear, setSelectedBrand]);
 
     const resetFilters = useCallback(() => {
         setSearchQuery(null);
         setSelectedBrand(null);
         setTypeFilter(null);
+        setItem_statusFilter(null);
         setSelectedYear(null);
         setPage(1);
     }, [
         setSearchQuery,
         setTypeFilter,
+        setItem_statusFilter,
         setSelectedBrand,
         setPage,
         setSelectedYear,
@@ -152,9 +165,9 @@ export function useItemTableFilters() {
 
     const isAnyFilterActive = useMemo(() => {
         return (
-            !!searchQuery || !!selectedYear || !!typeFilter || !!selectedBrand
+            !!searchQuery || !!selectedYear || !!typeFilter || !!item_statusFilter || !!selectedBrand
         );
-    }, [searchQuery, typeFilter, selectedBrand, selectedYear]);
+    }, [searchQuery, typeFilter, item_statusFilter, selectedBrand, selectedYear]);
 
 
     return {
@@ -165,7 +178,9 @@ export function useItemTableFilters() {
         resetFilters,
         isAnyFilterActive,
         typeFilter,
+        item_statusFilter,
         setTypeFilter,
+        setItem_statusFilter,
         yearOptions,
         selectedYear,
         setSelectedYear,

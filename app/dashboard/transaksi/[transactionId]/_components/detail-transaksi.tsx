@@ -19,6 +19,10 @@ import { cn, formatDate, formatToIndonesianCurrency } from '@/lib/utils';
 import ZoomableImage from '@/components/zoomable-image';
 import { getDeadlineInfo } from '@/lib/deadline';
 import { Badge } from '@/components/ui/badge';
+import {
+    calculateSisaTanggungan,
+    calculateTanggunganAkhir,
+} from '@/lib/transaction-helper';
 
 type Customer = {
     id: number;
@@ -35,6 +39,7 @@ type Item = {
     id: number;
     name: string;
     type: 'KENDARAAN' | 'OTHER';
+    item_status: 'MASUK' | 'KELUAR' | 'DIJUAL';
     desc?: string;
     year: number;
     value: any;
@@ -56,7 +61,7 @@ type Transaction = {
     tanggungan_awal: any;
     tanggungan_akhir: any;
     waktu_kembali: string;
-    status_transaksi: 'BERJALAN' | 'SELESAI' | 'TERLAMBAT';
+    status_transaksi: 'BERJALAN' | 'SELESAI' | 'PERPANJANG';
     status_cicilan: 'AMAN' | 'BERMASALAH' | 'DIJUAL';
     transactionDocuments: TransactionDocument[];
     cashflows: CashFlow[];
@@ -73,6 +78,7 @@ type CashFlow = {
     payment_type: 'CASH' | 'BNI' | 'BSI';
     kwitansi_url?: string;
     transaction: Transaction;
+    transactionId: number;
 };
 
 type CustomerPhone = {
@@ -136,6 +142,26 @@ export default function TransactionDetailPage({
 
         fetchTransaction();
     }, [params.transactionId]);
+    const tanggunganAkhir = calculateTanggunganAkhir({
+        tanggungan_awal: transaction?.tanggungan_awal,
+        tgl_jatuh_tempo: transaction?.tgl_jatuh_tempo ?? '',
+        persen_tanggungan: transaction?.persen_tanggungan,
+        nilai_pinjaman: transaction?.nilai_pinjaman,
+    });
+    const sisaTanggungan = calculateSisaTanggungan({
+        transaction: {
+            id: Number(params.transactionId),
+            tanggungan_awal: transaction?.tanggungan_awal,
+            tgl_jatuh_tempo: transaction?.tgl_jatuh_tempo ?? '',
+            persen_tanggungan: transaction?.persen_tanggungan,
+            nilai_pinjaman: transaction?.nilai_pinjaman,
+        },
+        cashflows:
+            transaction?.cashflows?.map((cashflow) => ({
+                transactionId: cashflow.transactionId,
+                amount: cashflow.amount,
+            })) ?? [], // Using the state variable which holds the fetched cashflows.
+    });
     if (loading) {
         return (
             <div className="w-full min-h-[calc(90dvh-100px)] flex gap-2 mx-auto items-center justify-center">
@@ -285,10 +311,15 @@ export default function TransactionDetailPage({
                             Tanggungan Akhir
                         </div>
                         <div className="py-2 col-span-2">
-                            :{' '}
-                            {formatToIndonesianCurrency(
-                                transaction.tanggungan_akhir,
-                            )}
+                            : {formatToIndonesianCurrency(tanggunganAkhir)}
+                        </div>
+                    </div>
+                    <div className="grid grid-cols-3">
+                        <div className="py-2 font-semibold col-span-1">
+                            Sisa Tanggungan
+                        </div>
+                        <div className="py-2 col-span-2">
+                            : {formatToIndonesianCurrency(sisaTanggungan)}
                         </div>
                     </div>
                     <div className="grid grid-cols-3">

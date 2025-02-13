@@ -17,6 +17,10 @@ import { toast } from 'sonner';
 import { CircleCheck } from 'lucide-react';
 import { useCustomerCheck } from '@/hooks/use-customer-check';
 import { useItemCheck } from '@/hooks/use-item-check';
+import {
+    calculateStatusCicilan,
+    calculateStatusTransaksi,
+} from '@/lib/transaction-helper';
 
 const LOCAL_STORAGE_KEY_FORM = 'formData';
 const LOCAL_STORAGE_KEY_STEP = 'currentStep';
@@ -220,7 +224,7 @@ const TransactionCreate = () => {
                             customerId: customerId, // Use the correct customerId (either new or existing)
                         }),
                     });
-    
+
                     if (!itemResponse.ok) {
                         setSubmissionStatus('error');
                         toast.error('Gagal menyimpan data barang!');
@@ -232,6 +236,13 @@ const TransactionCreate = () => {
                     setSubmissionStatus('success');
                     toast.success('Berhasil menyimpan data barang!');
                 }
+                const statusTransaksi = calculateStatusTransaksi({
+                    tgl_jatuh_tempo: formData.transJatuhTempo,
+                });
+                const statusCicilan = calculateStatusCicilan({
+                    tgl_jatuh_tempo: formData.transJatuhTempo,
+                    cashflows: [],
+                });
                 const transactionResponse = await fetch('/api/transactions', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -245,21 +256,29 @@ const TransactionCreate = () => {
                         tanggungan_awal: formData.transTanggunganAwal,
                         tanggungan_akhir: formData.transTanggunganAwal,
                         waktu_kembali: new Date(formData.transJatuhTempo),
-                        status_transaksi: 'BERJALAN',
-                        status_cicilan: 'AMAN',
+                        status_transaksi: statusTransaksi,
+                        status_cicilan: statusCicilan,
                         itemId: itemId,
                     }),
                 });
 
                 if (!transactionResponse.ok) {
+                    // Try to read the error details from the response
+                    const errorDetail = await transactionResponse.json();
+                    console.error('API Error Detail:', errorDetail);
+
                     setSubmissionStatus('error');
                     toast.error('Gagal menyimpan data transaksi!');
                     setIsSaving(false);
+                    console.log(statusTransaksi);
+                    console.log(statusCicilan);
                     return;
                 }
+
                 setSubmissionStatus('success');
                 toast.success('Berhasil menyimpan data transaksi!');
                 const { transaction } = await transactionResponse.json();
+
                 // Clear localStorage and move to the next step
                 localStorage.clear();
                 localStorage.setItem('transactionId', transaction.id);
@@ -268,6 +287,7 @@ const TransactionCreate = () => {
                 stepper.next();
                 setIsFinished(true);
             } catch (error: any) {
+                console.error('Fetch Error Detail:', error);
                 setSubmissionStatus('error');
                 toast.error(error.message || 'Gagal menyimpan data!');
                 setIsSaving(false);

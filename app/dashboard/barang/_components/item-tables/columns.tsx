@@ -8,6 +8,7 @@ import { formatDate, formatToIndonesianCurrency } from '@/lib/utils';
 import { ArrowUpDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Badge } from '@/components/ui/badge';
 
 type ItemWithCustomer = Item & {
     customer: Customer | null; // Related customer can be null if not present
@@ -62,29 +63,32 @@ export const columns: ColumnDef<ItemWithCustomer>[] = [
             );
         },
     },
-    // {
-    //     accessorKey: 'status',
-    //     header: ({ column }) => {
-    //         return (
-    //             <Button
-    //                 variant="ghost"
-    //                 size={'sm'}
-    //                 className="p-2 w-full text-left justify-start"
-    //                 onClick={() =>
-    //                     column.toggleSorting(column.getIsSorted() === 'asc')
-    //                 }
-    //             >
-    //                 STATUS
-    //                 <ArrowUpDown className="ml-2 h-4 w-4" />
-    //             </Button>
-    //         );
-    //     },
-    //     cell: ({ row }) => (
-    //         <Badge variant={row.getValue('status')} className="mx-2 text-xs">
-    //             {row.getValue('status')}
-    //         </Badge>
-    //     ),
-    // },
+    {
+        accessorKey: 'item_status',
+        header: ({ column }) => {
+            return (
+                <Button
+                    variant="ghost"
+                    size={'sm'}
+                    className="p-2 w-full text-left justify-start"
+                    onClick={() =>
+                        column.toggleSorting(column.getIsSorted() === 'asc')
+                    }
+                >
+                    STATUS
+                    <ArrowUpDown className="ml-2 h-4 w-4" />
+                </Button>
+            );
+        },
+        cell: ({ row }) => (
+            <Badge
+                variant={row.getValue('item_status')}
+                className="mx-2 text-xs"
+            >
+                {row.getValue('item_status')}
+            </Badge>
+        ),
+    },
     {
         accessorKey: 'serial',
         header: ({ column }) => {

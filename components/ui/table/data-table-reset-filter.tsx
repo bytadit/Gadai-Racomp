@@ -17,6 +17,7 @@ export function DataTableResetFilter({
             {isFilterActive ? (
                 <Button
                     variant="outline"
+                    size={'sm'}
                     onClick={onReset}
                     className={classname}
                 >

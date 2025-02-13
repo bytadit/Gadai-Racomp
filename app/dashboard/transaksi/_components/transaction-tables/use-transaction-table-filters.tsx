@@ -11,7 +11,7 @@ export const TYPE_OPTIONS = [
 export const STATUS_TRANSAKSI = [
     { value: 'BERJALAN', label: 'Berjalan' },
     { value: 'SELESAI', label: 'Selesai' },
-    { value: 'TERLAMBAT', label: 'Terlambat' },
+    { value: 'PERPANJANG', label: 'Perpanjang' },
 ];
 export const STATUS_CICILAN = [
     { value: 'AMAN', label: 'Aman' },

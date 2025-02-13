@@ -14,6 +14,8 @@ export const searchParams = {
   status: parseAsString,
   status_cicilan: parseAsString,
   status_transaksi: parseAsString,
+  item_status: parseAsString,
+  payment_type: parseAsString,
   year: parseAsString,
   type: parseAsString,
   categories: parseAsString

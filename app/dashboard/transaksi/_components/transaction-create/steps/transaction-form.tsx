@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { useFormContext } from 'react-hook-form';
+import { useFormContext, useWatch } from 'react-hook-form';
 import { Input } from '@/components/ui/input';
 import { TransactionFormValues, transactionSchema } from '@/lib/zod-schemas';
 import { Label } from '@/components/ui/label';
@@ -21,16 +21,47 @@ const TransactionStep = () => {
         setValue,
         register,
         // trigger,
+        control,
         formState: { errors },
     } = useFormContext<TransactionFormValues>();
+    // Use useWatch to subscribe to the two key fields.
+    const transWaktuPinjamValue = useWatch({
+        control,
+        name: 'transWaktuPinjam',
+    });
+    const transDurationValue = useWatch({
+        control,
+        name: 'transDuration',
+    });
+
+    // Ensure default values for transWaktuPinjam and transType.
     useEffect(() => {
-        if (!watch('transWaktuPinjam')) {
+        if (!transWaktuPinjamValue) {
             setValue('transWaktuPinjam', new Date());
-        } else if (!watch('transType')) {
+        }
+        if (!watch('transType')) {
             setValue('transType', 'PAKAI');
         }
-    }, [setValue, watch]);
+    }, [setValue, transWaktuPinjamValue, watch]);
+    // useEffect(() => {
+    //     if (!watch('transWaktuPinjam')) {
+    //         setValue('transWaktuPinjam', new Date());
+    //     } else if (!watch('transType')) {
+    //         setValue('transType', 'PAKAI');
+    //     }
+    // }, [setValue, watch]);
     // Override state for jatuh tempo
+    // const [isOverrideJatuhTempo, setIsOverrideJatuhTempo] = useState<boolean>(
+    //     () => {
+    //         if (typeof window !== 'undefined') {
+    //             const saved = localStorage.getItem('jatuhTempoOverride');
+    //             return saved !== null ? saved === 'true' : false;
+    //         }
+    //         return false;
+    //     },
+    // );
+
+    // Override state for "jatuh tempo"
     const [isOverrideJatuhTempo, setIsOverrideJatuhTempo] = useState<boolean>(
         () => {
             if (typeof window !== 'undefined') {
@@ -45,35 +76,50 @@ const TransactionStep = () => {
             'jatuhTempoOverride',
             isOverrideJatuhTempo.toString(),
         );
-
         if (!isOverrideJatuhTempo) {
-            const duration = watch('transDuration') || 1;
-            const newDate = new Date();
-            newDate.setMonth(newDate.getMonth() + duration);
-            setValue('transJatuhTempo', newDate);
+            // Get the duration (default to 1 if not set)
+            const duration = transDurationValue || 1;
+            // Use the transWaktuPinjam value as the base date; fallback to new Date()
+            const baseDate = transWaktuPinjamValue
+                ? new Date(transWaktuPinjamValue)
+                : new Date();
+            // Clone the base date and add the duration (in months)
+            const newJatuhTempo = new Date(baseDate);
+            newJatuhTempo.setMonth(newJatuhTempo.getMonth() + duration);
+            setValue('transJatuhTempo', newJatuhTempo);
         }
-    }, [watch('transDuration'), isOverrideJatuhTempo, setValue]);
+    }, [
+        transWaktuPinjamValue,
+        transDurationValue,
+        isOverrideJatuhTempo,
+        setValue,
+    ]);
 
     // Initialize default values
     useEffect(() => {
         const initialDuration = 1;
-        const initialJatuhTempo = new Date();
+        const baseDate = transWaktuPinjamValue
+            ? new Date(transWaktuPinjamValue)
+            : new Date();
+        const initialJatuhTempo = new Date(baseDate);
         initialJatuhTempo.setMonth(
             initialJatuhTempo.getMonth() + initialDuration,
         );
-
-        if (!watch('transDuration')) setValue('transDuration', initialDuration);
-        if (!watch('transJatuhTempo'))
+        if (!transDurationValue) {
+            setValue('transDuration', initialDuration);
+        }
+        if (!watch('transJatuhTempo')) {
             setValue('transJatuhTempo', initialJatuhTempo);
-    }, [setValue, watch]);
+        }
+    }, [setValue, transWaktuPinjamValue, transDurationValue, watch]);
 
     // const [isOverride, setIsOverride] = useState(false);
     const [isOverride, setIsOverride] = useState<boolean>(() => {
         if (typeof window !== 'undefined') {
             const saved = localStorage.getItem('percentOverride');
-            return saved !== null ? saved === 'true' : true;
+            return saved !== null ? saved === 'true' : false;
         }
-        return true;
+        return false;
     });
     useEffect(() => {
         localStorage.setItem('percentOverride', isOverride.toString());
@@ -176,6 +222,9 @@ const TransactionStep = () => {
                         Persen Tanggungan
                     </Label>
                     <div className="flex items-center gap-1">
+                        <span className="flex items-center p-1.5 space-x-2 border bg-secondary rounded-md">
+                            5%
+                        </span>
                         <div className="relative flex-1">
                             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
                                 Rp.
@@ -257,10 +306,7 @@ const TransactionStep = () => {
                     <div className="flex items-center gap-1">
                         <DateTimePicker
                             isDisabled={false}
-                            selectedDate={
-                                watch('transWaktuPinjam') || new Date()
-                            }
-                            // When a user picks a custom time, disable the “now” toggle.
+                            selectedDate={transWaktuPinjamValue || new Date()} // When a user picks a custom time, disable the “now” toggle.
                             setSelectedDate={(date) => {
                                 setValue('transWaktuPinjam', date);
                                 setWaktuPinjamNow(false);
@@ -366,14 +412,27 @@ const TransactionStep = () => {
                                 onPressedChange={(pressed) => {
                                     setIsOverrideJatuhTempo(pressed);
                                     if (!pressed) {
-                                        // Recalculate when turning off override
+                                        // When override is turned off, recalculate the due date using the base date.
                                         const duration =
                                             watch('transDuration') || 1;
-                                        const newDate = new Date();
-                                        newDate.setMonth(
-                                            newDate.getMonth() + duration,
+                                        const waktuPinjamValue =
+                                            watch('transWaktuPinjam');
+                                        const waktuPinjam = waktuPinjamValue
+                                            ? new Date(waktuPinjamValue)
+                                            : new Date();
+
+                                        // Clone the waktuPinjam date to compute the new due date.
+                                        const newJatuhTempo = new Date(
+                                            waktuPinjam,
                                         );
-                                        setValue('transJatuhTempo', newDate);
+                                        newJatuhTempo.setMonth(
+                                            newJatuhTempo.getMonth() + duration,
+                                        );
+
+                                        setValue(
+                                            'transJatuhTempo',
+                                            newJatuhTempo,
+                                        );
                                     }
                                 }}
                                 className="ml-2"
