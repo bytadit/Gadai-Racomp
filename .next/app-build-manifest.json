@@ -26,10 +26,20 @@
       "static/chunks/main-app.js",
       "static/chunks/app/dashboard/transaksi/[transactionId]/page.js"
     ],
-    "/dashboard/transaksi/[transactionId]/ubah/page": [
+    "/dashboard/cashflow/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/dashboard/transaksi/[transactionId]/ubah/page.js"
+      "static/chunks/app/dashboard/cashflow/page.js"
+    ],
+    "/dashboard/cashflow/[cashflowId]/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/dashboard/cashflow/[cashflowId]/page.js"
+    ],
+    "/dashboard/barang/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/dashboard/barang/page.js"
     ]
   }
 }

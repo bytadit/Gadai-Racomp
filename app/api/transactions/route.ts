@@ -48,7 +48,6 @@ export async function POST(req: Request) {
             'tgl_jatuh_tempo',
             'tanggungan_awal',
             'tanggungan_akhir',
-            'waktu_kembali',
             'status_transaksi',
             'status_cicilan',
             'itemId',

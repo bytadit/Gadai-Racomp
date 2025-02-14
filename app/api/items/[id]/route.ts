@@ -36,30 +36,44 @@ export async function PUT(
 ) {
     try {
         const itemId = parseInt(params.id, 10);
-        const { name, type, desc, year, value, brand, serial, item_status } =
-            await req.json();
+        const updateData = await req.json();
 
-        if (!name || !type || !desc || !year || !value || !brand || !serial || !item_status) {
-            return NextResponse.json(
-                { message: 'Missing required fields' },
-                { status: 400 },
-            );
+        // const { name, type, desc, year, value, brand, serial, item_status } =
+        //     await req.json();
+
+        // if (!name || !type || !desc || !year || !value || !brand || !serial || !item_status) {
+        //     return NextResponse.json(
+        //         { message: 'Missing required fields' },
+        //         { status: 400 },
+        //     );
+        // }
+
+        const allowedFields = [
+            'name',
+            'type',
+            'desc',
+            'year',
+            'value',
+            'brand',
+            'serial',
+            'item_status',
+        ];
+        // Filter only allowed fields from the update data
+        const cleanedData: Record<string, any> = {};
+
+        for (const [key, value] of Object.entries(updateData)) {
+            if (allowedFields.includes(key) && value !== undefined) {
+                cleanedData[key] = value;
+            }
         }
+
+        // Add updatedAt timestamp
+        cleanedData.updatedAt = new Date();
 
         // Update the document in the database
         const updatedItem = await prisma.item.update({
             where: { id: itemId },
-            data: {
-                name,
-                type,
-                item_status,
-                desc,
-                year,
-                value,
-                brand,
-                serial,
-                updatedAt: new Date(),
-            },
+            data: cleanedData,
         });
 
         return NextResponse.json(

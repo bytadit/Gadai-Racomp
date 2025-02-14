@@ -32,6 +32,8 @@ import { DateTimePicker } from '@/components/date-time-picker';
 import { Toggle } from '@/components/ui/toggle';
 import {
     calculateSisaTanggungan,
+    calculateStatusCicilan,
+    calculateStatusTransaksi,
     calculateTanggunganAkhir,
 } from '@/lib/transaction-helper';
 
@@ -47,6 +49,7 @@ type Transaction = {
     persen_tanggungan: any;
     nilai_pinjaman: any;
     tanggungan_akhir: any;
+    cashflows: Cashflow[];
 };
 
 type Cashflow = {
@@ -192,19 +195,57 @@ export default function EditCashflowForm({
             );
 
             if (!response.ok) throw new Error('Failed to update');
-
-            // If remaining debt is 0, update transaction status
-            if (values.tanggungan === 0 && selectedTransaction) {
+            if (selectedTransaction) {
+                let status_transaksi;
+                let status_cicilan;
+                let status_item;
+                let waktu_kembali;
+                const tanggunganAkhir = calculateTanggunganAkhir({
+                    tanggungan_awal: selectedTransaction.tanggungan_awal,
+                    tgl_jatuh_tempo: selectedTransaction.tgl_jatuh_tempo,
+                    persen_tanggungan: selectedTransaction.persen_tanggungan,
+                    nilai_pinjaman: selectedTransaction.nilai_pinjaman,
+                });
+                const statusTransaksi = calculateStatusTransaksi({
+                    tgl_jatuh_tempo: selectedTransaction.tgl_jatuh_tempo,
+                });
+                const statusCicilan = calculateStatusCicilan({
+                    tgl_jatuh_tempo: selectedTransaction.tgl_jatuh_tempo,
+                    cashflows: selectedTransaction.cashflows,
+                });
+                if (values.tanggungan === 0) {
+                    status_cicilan = statusCicilan;
+                    status_transaksi = 'SELESAI';
+                    status_item = 'KELUAR';
+                    waktu_kembali = new Date();
+                } else {
+                    status_cicilan = statusCicilan;
+                    status_transaksi = statusTransaksi;
+                    status_item = 'MASUK';
+                    waktu_kembali = null;
+                }
+                // Update transaction status
                 await fetch(`/api/transactions/${selectedTransaction.id}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ status_transaksi: 'SELESAI' }),
+                    body: JSON.stringify({
+                        status_transaksi: status_transaksi,
+                        status_cicilan: status_cicilan,
+                        tanggungan_akhir: tanggunganAkhir,
+                        waktu_kembali: waktu_kembali,
+                    }),
+                });
+                // Update item status
+                await fetch(`/api/items/${selectedTransaction.itemId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ item_status: status_item }),
                 });
             }
-
             router.push(`/dashboard/cashflow/${params.cashflowId}`);
             toast.success('Data cashflow berhasil diperbarui!');
-        } catch (error) {
+        } catch (error: any) {
+            console.log(`Error: ${error.message}`);
             toast.error('Gagal menyimpan perubahan!');
         } finally {
             setIsPending(false);

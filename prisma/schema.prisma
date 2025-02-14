@@ -135,7 +135,7 @@ model Transaction {
   tgl_jatuh_tempo DateTime @db.Date
   tanggungan_awal Decimal @db.Money
   tanggungan_akhir Decimal @db.Money
-  waktu_kembali DateTime @db.Timestamp()
+  waktu_kembali DateTime? @db.Timestamp()
   status_transaksi TransactionStatus @default(BERJALAN)
   status_cicilan CicilanStatus @default(AMAN)
   desc String? @db.Text

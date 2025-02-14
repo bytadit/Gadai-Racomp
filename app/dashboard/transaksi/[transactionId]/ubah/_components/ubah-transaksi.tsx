@@ -37,8 +37,10 @@ import { DocumentEditor } from '@/components/document-editor';
 import { Toggle } from '@/components/ui/toggle';
 import { DateTimePicker } from '@/components/date-time-picker';
 import {
+    calculateSisaTanggungan,
     calculateStatusCicilan,
     calculateStatusTransaksi,
+    calculateTanggunganAkhir,
 } from '@/lib/transaction-helper';
 
 type Transaction = {
@@ -51,7 +53,7 @@ type Transaction = {
     tgl_jatuh_tempo: string;
     tanggungan_awal: any;
     tanggungan_akhir: any;
-    waktu_kembali: string;
+    waktu_kembali?: string;
     cashflows: CashFlow[];
     status_transaksi: 'BERJALAN' | 'SELESAI' | 'PERPANJANG';
     status_cicilan: 'AMAN' | 'BERMASALAH' | 'DIJUAL';
@@ -95,7 +97,6 @@ export default function EditTransactionForm({
 }: {
     params: { transactionId: string };
 }) {
-    const transactionId = params.transactionId;
     const transactionSchema = z.object({
         nilai_pinjaman: z.coerce
             .number()
@@ -152,18 +153,13 @@ export default function EditTransactionForm({
                 message:
                     'Nilai tanggungan akhir tidak boleh melebih 1 trilyun!',
             }),
-        waktu_kembali: z.preprocess(
-            (arg) => {
-                // If the input is a string, try to convert it to a Date.
-                if (typeof arg === 'string' || arg instanceof Date) {
-                    return new Date(arg);
-                }
-                return arg;
-            },
-            z.date({
-                required_error: 'Masukkan waktu pengembalian barang!',
-            }),
-        ),
+        waktu_kembali: z.preprocess((arg) => {
+            if (arg === null) return null;
+            if (typeof arg === 'string' || arg instanceof Date) {
+                return new Date(arg);
+            }
+            return arg;
+        }, z.date().nullable()),
         status_transaksi: z.enum(['BERJALAN', 'SELESAI', 'PERPANJANG'], {
             required_error: 'Pilih status transaksi!',
         }),
@@ -207,7 +203,7 @@ export default function EditTransactionForm({
                 d.setMonth(d.getMonth() + 1);
                 return d;
             })(),
-            waktu_kembali: new Date(),
+            waktu_kembali: null,
             status_transaksi: 'BERJALAN',
             status_cicilan: 'AMAN',
             tanggungan_awal: 0,
@@ -222,6 +218,8 @@ export default function EditTransactionForm({
     const [transaction, setTransaction] = React.useState<Transaction | null>(
         null,
     );
+    const [sisaTanggungan, setSisaTanggungan] = React.useState(0);
+    const [cashflow, setCashflow] = React.useState<CashFlow[] | []>([]);
     const [isPending, setIsPending] = React.useState(false);
     const [loading, setLoading] = React.useState(true);
     const [documentData, setDocumentData] = React.useState({
@@ -287,6 +285,7 @@ export default function EditTransactionForm({
                             tgl_jatuh_tempo: data.tgl_jatuh_tempo,
                             cashflows: data.cashflows, // replace [] with actual cashflow data if available
                         }) as 'AMAN' | 'BERMASALAH' | 'DIJUAL';
+                        setCashflow(data.cashflows);
                         form.setValue('nilai_pinjaman', data.nilai_pinjaman);
                         form.setValue(
                             'persen_tanggungan',
@@ -436,30 +435,12 @@ export default function EditTransactionForm({
         );
         if (!isOverrideTanggunganAkhir) {
             // Ensure we have a valid due date (tgl_jatuh_tempo)
-            const dueDate = new Date(tgl_jatuh_tempo);
-            let newTanggunganAkhir = tanggungan_awal;
-
-            if (dueDate > now) {
-                // If the due date is in the future, default is tanggungan_awal.
-                newTanggunganAkhir = tanggungan_awal;
-            } else {
-                // Calculate the difference in days.
-                const diffTime = Math.abs(now.getTime() - dueDate.getTime());
-                const diffDays = diffTime / (1000 * 60 * 60 * 24);
-
-                if (diffDays <= 10) {
-                    // If within 10 days, add one unit of persen_tanggungan.
-                    newTanggunganAkhir = tanggungan_awal + persen_tanggungan;
-                } else {
-                    // Otherwise, calculate the month difference between now and dueDate.
-                    const yearDiff = now.getFullYear() - dueDate.getFullYear();
-                    const monthDiff =
-                        now.getMonth() - dueDate.getMonth() + yearDiff * 12;
-                    // Here we assume “10% * nilai_pinjaman” per month.
-                    newTanggunganAkhir =
-                        tanggungan_awal + monthDiff * 0.1 * nilai_pinjaman;
-                }
-            }
+            const newTanggunganAkhir = calculateTanggunganAkhir({
+                tanggungan_awal: tanggungan_awal,
+                tgl_jatuh_tempo: tgl_jatuh_tempo,
+                persen_tanggungan: persen_tanggungan,
+                nilai_pinjaman: nilai_pinjaman,
+            });
             form.setValue('tanggungan_akhir', newTanggunganAkhir);
             localStorage.setItem(
                 'tanggungan_akhir',
@@ -480,12 +461,24 @@ export default function EditTransactionForm({
     React.useEffect(() => {
         localStorage.setItem('waktuKembaliNow', waktuKembaliNow.toString());
         if (waktuKembaliNow) {
-            const dueDate = new Date(tgl_jatuh_tempo);
-            // If now is earlier than the due date, default to due date; otherwise, use now.
-            if (now < dueDate) {
-                form.setValue('waktu_kembali', dueDate);
-            } else {
-                form.setValue('waktu_kembali', now);
+            if (transaction) {
+                const sisaTanggungan = calculateSisaTanggungan({
+                    transaction: {
+                        id: transaction.id,
+                        tanggungan_awal: tanggungan_awal,
+                        tgl_jatuh_tempo: tgl_jatuh_tempo,
+                        persen_tanggungan: persen_tanggungan,
+                        nilai_pinjaman: nilai_pinjaman,
+                    },
+                    cashflows: cashflow, // Using the state variable which holds the fetched cashflows.
+                });
+                setSisaTanggungan(sisaTanggungan);
+                // If now is earlier than the due date, default to due date; otherwise, use now.
+                if (sisaTanggungan === 0) {
+                    form.setValue('waktu_kembali', now);
+                } else {
+                    form.setValue('waktu_kembali', null);
+                }
             }
         }
     }, [tgl_jatuh_tempo, waktuKembaliNow, form, now]);

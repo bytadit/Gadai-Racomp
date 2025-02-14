@@ -20,6 +20,7 @@ import { useItemCheck } from '@/hooks/use-item-check';
 import {
     calculateStatusCicilan,
     calculateStatusTransaksi,
+    calculateTanggunganAkhir,
 } from '@/lib/transaction-helper';
 
 const LOCAL_STORAGE_KEY_FORM = 'formData';
@@ -243,6 +244,18 @@ const TransactionCreate = () => {
                     tgl_jatuh_tempo: formData.transJatuhTempo,
                     cashflows: [],
                 });
+                // Update item status
+                await fetch(`/api/items/${itemId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ item_status: 'MASUK' }),
+                });
+                const tanggunganAkhir = calculateTanggunganAkhir({
+                    tanggungan_awal: formData.transTanggunganAwal,
+                    tgl_jatuh_tempo: formData.transJatuhTempo,
+                    persen_tanggungan: formData.transPersenTanggungan,
+                    nilai_pinjaman: formData.transNilaiPinjaman,
+                });
                 const transactionResponse = await fetch('/api/transactions', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -254,8 +267,8 @@ const TransactionCreate = () => {
                         waktu_pinjam: new Date(formData.transWaktuPinjam),
                         tgl_jatuh_tempo: new Date(formData.transJatuhTempo),
                         tanggungan_awal: formData.transTanggunganAwal,
-                        tanggungan_akhir: formData.transTanggunganAwal,
-                        waktu_kembali: new Date(formData.transJatuhTempo),
+                        tanggungan_akhir: tanggunganAkhir,
+                        waktu_kembali: null,
                         status_transaksi: statusTransaksi,
                         status_cicilan: statusCicilan,
                         itemId: itemId,

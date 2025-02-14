@@ -159,17 +159,21 @@ export const columns: ColumnDef<TransactionWithItem>[] = [
                 </Button>
             );
         },
-        cell: ({ cell }) => {
-            const deadlineInfo = getDeadlineInfo(cell.getValue() as string);
+        cell: ({ row }) => {
+            const deadlineInfo = getDeadlineInfo(
+                row.getValue('tgl_jatuh_tempo') as string,
+            );
             return (
-                <div className="px-2 flex items-center whitespace-nowrap overflow-hidden">
+                <div className="px-2 flex items-center text-left whitespace-nowrap overflow-hidden">
                     <span
                         className={`mr-2 font-bold flex-shrink-0 ${deadlineInfo.textColor}`}
                     >
-                        {deadlineInfo.statusText}
+                        {row.getValue('status_transaksi') === 'SELESAI'
+                            ? ''
+                            : deadlineInfo.statusText}
                     </span>
                     <span className="overflow-hidden text-ellipsis flex-shrink">
-                        {formatDate(cell.getValue() as string)}
+                        {formatDate(row.getValue('tgl_jatuh_tempo') as string)}
                     </span>
                 </div>
             );

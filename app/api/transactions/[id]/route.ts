@@ -53,7 +53,6 @@ export async function PUT(
             'desc',
             'itemId',
         ];
-
         // Filter only allowed fields from the update data
         const cleanedData: Record<string, any> = {};
 

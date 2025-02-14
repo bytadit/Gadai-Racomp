@@ -32,7 +32,12 @@ import { SpokeSpinner } from '@/components/ui/spinner';
 import { formatCurrency, formatDate, parseCurrency } from '@/lib/utils';
 import { DateTimePicker } from '@/components/date-time-picker';
 import { Toggle } from '@/components/ui/toggle';
-import { calculateSisaTanggungan } from '@/lib/transaction-helper';
+import {
+    calculateSisaTanggungan,
+    calculateStatusCicilan,
+    calculateStatusTransaksi,
+    calculateTanggunganAkhir,
+} from '@/lib/transaction-helper';
 type Customer = {
     id: number;
     name: string;
@@ -56,12 +61,14 @@ type Transaction = {
     persen_tanggungan: any;
     nilai_pinjaman: any;
     tanggungan_akhir: any;
+    cashflows: Cashflow[];
 };
 
 type Cashflow = {
     termin: number;
     amount: any;
     transactionId: number;
+    waktu_bayar: string;
 };
 export default function CashflowForm() {
     const [initialTanggungan, setInitialTanggungan] = useState<number>(0);
@@ -301,21 +308,52 @@ export default function CashflowForm() {
             });
 
             if (!response.ok) throw new Error('Failed to save');
-            // If remaining debt is 0, update transaction and item status
-            if (values.tanggungan === 0 && selectedTransaction) {
+            if (selectedTransaction) {
+                let status_transaksi;
+                let status_cicilan;
+                let status_item;
+                let waktu_kembali;
+                const tanggunganAkhir = calculateTanggunganAkhir({
+                    tanggungan_awal: selectedTransaction.tanggungan_awal,
+                    tgl_jatuh_tempo: selectedTransaction.tgl_jatuh_tempo,
+                    persen_tanggungan: selectedTransaction.persen_tanggungan,
+                    nilai_pinjaman: selectedTransaction.nilai_pinjaman,
+                });
+                const statusTransaksi = calculateStatusTransaksi({
+                    tgl_jatuh_tempo: selectedTransaction.tgl_jatuh_tempo,
+                });
+                const statusCicilan = calculateStatusCicilan({
+                    tgl_jatuh_tempo: selectedTransaction.tgl_jatuh_tempo,
+                    cashflows: selectedTransaction.cashflows,
+                });
+                if (values.tanggungan === 0) {
+                    status_cicilan = statusCicilan;
+                    status_transaksi = 'SELESAI';
+                    status_item = 'KELUAR';
+                    waktu_kembali = new Date();
+                } else {
+                    status_cicilan = statusCicilan;
+                    status_transaksi = statusTransaksi;
+                    status_item = 'MASUK';
+                    waktu_kembali = null;
+                }
                 // Update transaction status
                 await fetch(`/api/transactions/${selectedTransaction.id}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ status_transaksi: 'SELESAI' }),
+                    body: JSON.stringify({
+                        status_transaksi: status_transaksi,
+                        status_cicilan: status_cicilan,
+                        tanggungan_akhir: tanggunganAkhir,
+                        waktu_kembali: waktu_kembali,
+                    }),
                 });
-
-                // // Update item status
-                // await fetch(`/api/items/${selectedTransaction.itemId}`, {
-                //     method: 'PUT',
-                //     headers: { 'Content-Type': 'application/json' },
-                //     body: JSON.stringify({ status: 'KELUAR' }),
-                // });
+                // Update item status
+                await fetch(`/api/items/${selectedTransaction.itemId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ item_status: status_item }),
+                });
             }
 
             const { cashflow } = await response.json();
