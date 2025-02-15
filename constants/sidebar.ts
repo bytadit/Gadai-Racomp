@@ -57,7 +57,7 @@ export const userMenuItems: NavItem[] = [
     {
         title: 'Barang',
         url: '/dashboard/barang',
-        icon: 'item',
+        icon: 'bike',
         shortcut: ['b', 'b'],
         items: [],
     },

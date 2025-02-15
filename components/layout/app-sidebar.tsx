@@ -26,11 +26,12 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import * as React from 'react';
 import { Icons } from '../icons';
+import Image from 'next/image';
 
 export const company = {
-    name: 'RAComputex',
+    name: 'RAComp',
     logo: GalleryVerticalEnd,
-    plan: 'Enterprise',
+    plan: 'Tech & Property',
 };
 
 export default function AppSidebar() {
@@ -56,20 +57,26 @@ function DesktopSidebar({ pathname }: { pathname: string }) {
         <Sidebar collapsible="icon">
             <SidebarHeader>
                 <div className="flex gap-2 py-2 text-sidebar-accent-foreground">
-                    <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                        <company.logo className="size-4" />
+                    <div className="flex aspect-square size-9 items-center justify-center rounded-lg bg-transparent text-sidebar-primary-foreground">
+                        {/* <company.logo className="size-4" /> */}
+                        <Image
+                            width={64}
+                            height={64}
+                            alt="company-logo"
+                            src="/static/compact.svg"
+                        />
                     </div>
-                    <div className="grid flex-1 text-left text-sm leading-tight">
+                    <div className="grid flex-1 text-left text-md leading-tight items-center">
                         <span className="truncate font-semibold">
                             {company.name}
                         </span>
-                        <span className="truncate text-xs">{company.plan}</span>
+                        <span className="truncate text-sm">{company.plan}</span>
                     </div>
                 </div>
             </SidebarHeader>
             <SidebarContent className="overflow-x-hidden">
                 <SidebarGroup>
-                    <SidebarGroupLabel>Menu User</SidebarGroupLabel>
+                    <SidebarGroupLabel>Menu Admin</SidebarGroupLabel>
                     <SidebarMenu>
                         {userMenuItems.map((item) => (
                             <DesktopMenuItem
@@ -155,7 +162,7 @@ function DesktopMenuItem({
 
 function MobileNavigation({ pathname }: { pathname: string }) {
     return (
-        <nav className="flex items-center justify-around p-2">
+        <nav className="flex items-center justify-around p-1">
             {userMenuItems.map((item) => {
                 const Icon = item.icon ? Icons[item.icon] : Icons.logo;
                 const isActiveParent =
@@ -168,11 +175,11 @@ function MobileNavigation({ pathname }: { pathname: string }) {
                         href={item.url}
                         className={`flex flex-col items-center p-2 rounded-lg ${
                             isActiveParent
-                                ? 'bg-accent text-accent-foreground'
+                                ? 'bg-accent text-sidebar-primary'
                                 : 'hover:bg-muted'
                         }`}
                     >
-                        <Icon className="h-5 w-5" />
+                        <Icon className="h-6 w-6" />
                         <span className="text-xs mt-1 hidden md:inline">
                             {item.title}
                         </span>

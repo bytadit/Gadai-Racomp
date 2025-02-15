@@ -51,7 +51,7 @@ export default async function TransactionListingPage() {
                         href={'/dashboard/transaksi/baru'}
                         className={cn(buttonVariants({ variant: 'default' }))}
                     >
-                        <Plus className="mr-2 h-4 w-4" /> Tambah
+                        <Plus className="h-4 w-4" />
                     </Link>
                 </div>
                 <Separator />
